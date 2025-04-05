@@ -2,6 +2,7 @@
 
 import User from '../models/user.model.js';
 
+
 // GET /api/admin/users - Get all users
 export const getAllUsers = async (req, res) => {
   try {

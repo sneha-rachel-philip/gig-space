@@ -2,7 +2,7 @@
   "name": "gig-space",
   "version": "1.0.0",
   "description": "A freelance platform using MERN stack",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js"
   },

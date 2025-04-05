@@ -1,8 +1,9 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config(); // Load environment variables
 import cors from 'cors';
 import connectDB from './config/db.js';
-
+import express from 'express';
+//import stripe from 'stripe';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
@@ -13,7 +14,9 @@ import messageRoutes from './routes/message.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 
-dotenv.config();
+
+
+
 const app = express();
 
 // Connect to MongoDB
@@ -34,9 +37,10 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
 
+
 // Health check route
 app.get('/', (req, res) => {
-  res.send(' Freelance Job Platform API is running...');
+  res.send('Freelance Job Platform API is running...');
 });
 
 // Error handling 
@@ -48,5 +52,7 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(` Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
+
+

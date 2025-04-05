@@ -1,11 +1,11 @@
-// controllers/payment.controller.js
+import dotenv from 'dotenv';
+dotenv.config();
 import stripe from 'stripe';
 import Payment from '../models/payment.model.js';
 import Contract from '../models/contract.model.js';
 import User from '../models/user.model.js';
 
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY); // Stripe secret key
-
 // Create a payment for a contract
 export const createPayment = async (req, res) => {
   try {
@@ -26,6 +26,7 @@ export const createPayment = async (req, res) => {
       currency: 'usd',
       payment_method: paymentMethodId,
       confirm: true, // Confirm the payment immediately
+      return_url: 'http://localhost:3000/payment-success',  // Placeholder return URL for testing
     });
 
     // Save the payment details to the database
