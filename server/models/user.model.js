@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      default: '',
     },
 
     email: {
@@ -47,6 +48,7 @@ const userSchema = new mongoose.Schema(
     skills: [
       {
         type: String,
+         default: '',
       },
     ],
     hourlyRate: {
@@ -62,12 +64,14 @@ const userSchema = new mongoose.Schema(
         title: String,
         link: String,
         description: String,
+        
       },
     ],
 
     // Client-specific fields
     company: {
       type: String,
+      default: ''
     },
 
     // Ratings + Reviews (optional, but useful!)

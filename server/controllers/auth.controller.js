@@ -22,6 +22,7 @@ export const registerUser = async (req, res) => {
 
     // Create new user
     const user = await User.create({ name, email, password, role });
+    console.log('Register request body:', req.body);
 
     res.status(201).json({
       _id: user._id,
@@ -38,6 +39,7 @@ export const registerUser = async (req, res) => {
 // POST /login
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log('Login request received:', req.body);
 
   try {
     const user = await User.findOne({ email });
