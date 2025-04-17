@@ -11,11 +11,14 @@ import { authorizeRoles } from '../middlewares/roleMiddleware.js';
 
 const router = express.Router();
 
+// Protected: Get current logged-in user
+router.get('/me', authenticate, getCurrentUser);
+
+
 // Public route: Get user by ID (profile)
 router.get('/:id', getUserById);
 
-// Protected: Get current logged-in user
-router.get('/me', authenticate, getCurrentUser);
+
 
 // Protected: Update current user's profile
 router.put('/me', authenticate, updateUser);

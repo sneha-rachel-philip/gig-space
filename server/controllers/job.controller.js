@@ -28,8 +28,24 @@ export const postJob = async (req, res) => {
 // GET /api/jobs - Get all jobs
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate('client', 'name email').populate('freelancers', 'name email');
-    res.json(jobs);
+    const filter = {};
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const jobs = await Job.find(filter)
+      .skip(skip)
+      .limit(limit) 
+      .populate('client', 'name email')
+      .populate('freelancers', 'name email');
+
+    const totalJobs = await Job.countDocuments(filter);
+
+    res.json({ jobs, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ error: 'Error fetching jobs.' });
   }
@@ -48,23 +64,24 @@ export const getJobById = async (req, res) => {
   }
 };
 
-// PUT /api/jobs/:id - Update job status (open/closed)
+// PUT /api/jobs/:id/status - Update job status (open/closed)
 export const updateJobStatus = async (req, res) => {
   const { status } = req.body;
+
   try {
     const job = await Job.findById(req.params.id);
     if (!job) {
       return res.status(404).json({ error: 'Job not found.' });
     }
 
-    // Ensure that only the client who posted the job can change the status
     if (job.client.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'You are not authorized to change the job status.' });
     }
 
     job.status = status;
     await job.save();
-    res.json(job);
+    const updatedJob = await Job.findById(job._id).populate('client', 'name email').populate('freelancers', 'name email');
+    res.json(updatedJob);
   } catch (err) {
     res.status(500).json({ error: 'Error updating job status.' });
   }
@@ -95,3 +112,18 @@ export const applyForJob = async (req, res) => {
     res.status(500).json({ error: 'Error applying for job.' });
   }
 };
+
+// GET /api/client/jobs - Get jobs created by the logged-in client
+export const getJobsByClient = async (req, res) => {
+  try {
+    const jobs = await Job.find({ client: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate('freelancers', 'name email');
+
+    res.status(200).json(jobs);
+  } catch (err) {
+    console.error('Error fetching client jobs:', err);
+    res.status(500).json({ error: 'Error fetching client jobs.' });
+  }
+};
+

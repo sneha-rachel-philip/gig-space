@@ -20,6 +20,11 @@ const jobSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    category: {
+      type: String,
+      enum: ['Design', 'Development', 'Writing', 'Marketing'], // etc.
+    },
+    
     client: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',  // Link to the user who created the job

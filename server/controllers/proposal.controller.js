@@ -72,7 +72,7 @@ export const getProposalsForJob = async (req, res) => {
 };
 
 // Update the status of a proposal (client can accept/reject)
-export const updateProposalStatus = async (req, res) => {
+/* export const updateProposalStatus = async (req, res) => {
   try {
     const { proposalId, status } = req.body;
 
@@ -98,5 +98,39 @@ export const updateProposalStatus = async (req, res) => {
     res.status(200).json({ message: 'Proposal status updated', proposal });
   } catch (err) {
     res.status(500).json({ error: 'Error updating proposal status' });
+  }
+};
+ */
+// Accept Proposal
+export const acceptProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) return res.status(404).json({ message: 'Proposal not found' });
+
+    proposal.status = 'accepted';
+    await proposal.save();
+
+    res.status(200).json({ message: 'Proposal accepted', proposal });
+  } catch (err) {
+    res.status(500).json({ message: 'Error accepting proposal', error: err.message });
+  }
+};
+
+// Reject Proposal
+export const rejectProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) return res.status(404).json({ message: 'Proposal not found' });
+
+    proposal.status = 'rejected';
+    await proposal.save();
+
+    res.status(200).json({ message: 'Proposal rejected', proposal });
+  } catch (err) {
+    res.status(500).json({ message: 'Error rejecting proposal', error: err.message });
   }
 };

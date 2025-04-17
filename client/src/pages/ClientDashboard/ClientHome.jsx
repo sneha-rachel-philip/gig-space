@@ -16,11 +16,33 @@ const ClientHome = () => {
   useEffect(() => {
     // Fetch data from API here and set projects + stats
 
-    const fetchUserName = async () => {
-        const userData = await fetch('/api/users'); // Replace with actual API call
+    /* const fetchUserName = async () => {
+        const userData = await fetch('/api/users/me'); // Replace with actual API call
         const user = await userData.json();
         setUserName(user.name); // Dynamically update the userName
-      };
+      }; */
+      const fetchUserName = async () => {
+        try {
+          const token = localStorage.getItem('token'); // Get token from localStorage
+      
+          const response = await fetch('/api/users/me', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+      
+          if (!response.ok) {
+            throw new Error('Failed to fetch user');
+          }
+      
+          const user = await response.json();
+          console.log('User data:', user); // Debugging line
+          setUserName(user.name); // Update the welcome banner
+        } catch (err) {
+          console.error('Error fetching user name:', err);
+          setUserName('Client'); // Fallback
+        }
+      }; 
     
       fetchUserName();
     // Dummy data for now:

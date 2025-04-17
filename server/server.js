@@ -13,6 +13,7 @@ import contractRoutes from './routes/contract.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import clientRoutes from './routes/client.routes.js'; 
 
 
 
@@ -27,6 +28,7 @@ app.use(cors());
 app.use(express.json()); // Parse JSON bodies
 
 // Routes
+app.use('/api/client', clientRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);

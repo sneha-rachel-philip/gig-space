@@ -5,7 +5,8 @@ import { authorizeRoles } from '../middlewares/roleMiddleware.js';
 import {
   submitProposal,
   getProposalsForJob,
-  updateProposalStatus,
+  acceptProposal,
+  rejectProposal,
 } from '../controllers/proposal.controller.js';
 
 const router = express.Router();
@@ -17,6 +18,10 @@ router.post('/submit', authenticate, authorizeRoles('freelancer'), submitProposa
 router.get('/:jobId', authenticate, getProposalsForJob);
 
 // Client can update proposal status (accept/reject)
-router.put('/update', authenticate, authorizeRoles('client'), updateProposalStatus);
+// Accept a proposal
+router.put('/:proposalId/accept', authenticate, authorizeRoles('client'), acceptProposal);
+
+// Reject a proposal
+router.put('/:proposalId/reject', authenticate, authorizeRoles('client'), rejectProposal);
 
 export default router;

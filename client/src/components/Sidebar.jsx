@@ -1,16 +1,51 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import {
+  FaHome,
+  FaFolderOpen,
+  FaMoneyBill,
+  FaEnvelope,
+  FaPlusCircle,
+  FaBriefcase,
+} from 'react-icons/fa';
 
-const Sidebar = () => {
+const Sidebar = ({ role }) => {
+  const linkStyle =
+    'flex items-center gap-3 px-4 py-2 rounded hover:bg-blue-100 transition';
+  const activeStyle = 'bg-blue-200 font-semibold';
+
   return (
-    <div className="w-64 bg-white shadow-md h-full p-5">
-      <h2 className="text-xl font-bold mb-6">Client Dashboard</h2>
-      <nav className="space-y-4">
-        <Link to="/client/home" className="block">🏠 Home</Link>
-        <Link to="/client/projects" className="block">📁 Projects</Link>
-        <Link to="/client/payments" className="block">💳 Payments</Link>
-        <Link to="/client/messages" className="block">💬 Messages</Link>
+    <aside className="w-64 bg-white shadow-md h-screen sticky top-0 p-4">
+      <h2 className="text-xl font-bold mb-6">
+        {role === 'freelancer' ? 'Freelancer' : 'Client'} Dashboard
+      </h2>
+
+      <nav className="flex flex-col gap-2">
+        <NavLink to={`/${role}/home`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
+          <FaHome /> Home
+        </NavLink>
+
+        <NavLink to={`/${role}/projects`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
+          <FaFolderOpen /> Projects
+        </NavLink>
+
+        <NavLink to={`/${role}/payments`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
+          <FaMoneyBill /> Payments
+        </NavLink>
+
+        <NavLink to={`/${role}/messages`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
+          <FaEnvelope /> Messages
+        </NavLink>
+
+        {role === 'client' && (
+          <NavLink
+            to="/client/jobs"
+            className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}
+          >
+            <FaBriefcase /> Manage Jobs
+          </NavLink>
+        )}
       </nav>
-    </div>
+    </aside>
   );
 };
 

@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom';
 const ClientDashboardLayout = () => {
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar role="client"/>
       <main className="flex-1 p-6 bg-gray-100">
         <Outlet />
       </main>
