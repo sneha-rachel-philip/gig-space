@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import axios from '../services/axiosInstance'; // Using the same instance as Login
+import { registerUser } from '../services/apiRoutes';
 
 function Signup() {
   const [name, setName] = useState('');
@@ -22,12 +22,7 @@ function Signup() {
 
     try {
       setLoading(true);
-      const res= await axios.post('/auth/register', {
-        name,
-        email,
-        password,
-        role,
-      });
+      const res = await registerUser({ name, email, password, role });
       console.log('Signup response:', res.data);
       toast.success(' Signup successful.');
       navigate('/');

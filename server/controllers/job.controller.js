@@ -28,28 +28,37 @@ export const postJob = async (req, res) => {
 // GET /api/jobs - Get all jobs
 export const getJobs = async (req, res) => {
   try {
+    // Filter by category if provided
     const filter = {};
     if (req.query.category) {
       filter.category = req.query.category;
     }
 
+    // Handle pagination parameters
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Fetch jobs with pagination and filtering
     const jobs = await Job.find(filter)
       .skip(skip)
-      .limit(limit) 
+      .limit(limit)
       .populate('client', 'name email')
       .populate('freelancers', 'name email');
 
-    const totalJobs = await Job.countDocuments(filter);
+    const totalJobs = await Job.countDocuments(filter);  // Count all jobs with the filter applied
 
-    res.json({ jobs, total, page, pages: Math.ceil(total / limit) });
+    res.json({
+      jobs,
+      total: totalJobs,
+      page,
+      pages: Math.ceil(totalJobs / limit),
+    });
   } catch (err) {
     res.status(500).json({ error: 'Error fetching jobs.' });
   }
 };
+
 
 // GET /api/jobs/:id - Get job details by ID
 export const getJobById = async (req, res) => {
@@ -84,6 +93,37 @@ export const updateJobStatus = async (req, res) => {
     res.json(updatedJob);
   } catch (err) {
     res.status(500).json({ error: 'Error updating job status.' });
+  }
+};
+
+// PUT /api/jobs/:id - Update job details
+export const updateJob = async (req, res) => {
+  const { title, description, budget, skillsRequired, category } = req.body;
+
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+
+    // Ensure that only the client who posted the job can update it
+    if (job.client.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'You are not authorized to update this job.' });
+    }
+
+    // Update job fields
+    job.title = title || job.title;
+    job.description = description || job.description;
+    job.budget = budget || job.budget;
+    job.skillsRequired = skillsRequired || job.skillsRequired;
+    job.category = category || job.category;
+
+    await job.save();
+    const updatedJob = await Job.findById(job._id).populate('client', 'name email').populate('freelancers', 'name email');
+
+    res.json(updatedJob);
+  } catch (err) {
+    res.status(500).json({ error: 'Error updating job details.' });
   }
 };
 

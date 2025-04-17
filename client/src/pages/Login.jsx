@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // for navigation
 import { toast } from 'react-toastify'; // for toast notifications
-import axios from '../services/axiosInstance'; 
+import { loginUser } from '../services/apiRoutes';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
@@ -20,13 +20,13 @@ function Login() {
     try {
       setLoading(true); // Optional: Set loading state if needed
       // Make API call to login
-      const res = await axios.post('/auth/login', {
+      const res = await loginUser({
         email,
         password,
       });
-
-      const { token, user } = res.data;
-
+      //console.log(res.data);
+      const { token, ...user } = res.data;
+      //console.log('User data:', user); // Debugging line
       // Save token to localStorage (or Context later)
       localStorage.setItem('token', token);
 
@@ -34,13 +34,22 @@ function Login() {
        toast.success('Login successful!');
 
       // Optionally, you can set user data in context or state management
-      setUser(res.data)
+      setUser(user)
 
 
       console.log('Login successful:', user);
        // Redirect to dashboard
        //navigate('/dashboard');
+       if (user.role === 'admin') {
+        navigate('/admin/home'); // Redirect to admin home page 
+      } else if (user.role === 'freelancer') {
+        navigate('/freelancer/home'); // Redirect to freelancer home page
+      } else if (user.role === 'client') {    
        navigate('/client/home'); // Redirect to client home page
+      }
+      else {
+        navigate('/userdashboard'); // Redirect to user dashboard (generic)
+      }
 
     } catch (error) {
       console.error('Login error:', error);

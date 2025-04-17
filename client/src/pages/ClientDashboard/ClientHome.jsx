@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import WelcomeBanner from '../../components/WelcomeBanner';
 import StatsOverview from '../../components/StatsOverview';
 import ProjectTable from '../../components/ProjectTable';
+import { useAuth } from '../../context/useAuth';
+
 
 const ClientHome = () => {
-  const [userName, setUserName] = useState('Client Name'); // Replace with context or API
+  const { user } = useAuth(); // Replace with context or API
   const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState({
     active: 0,
@@ -21,7 +23,7 @@ const ClientHome = () => {
         const user = await userData.json();
         setUserName(user.name); // Dynamically update the userName
       }; */
-      const fetchUserName = async () => {
+      /* const fetchUserName = async () => {
         try {
           const token = localStorage.getItem('token'); // Get token from localStorage
       
@@ -44,7 +46,7 @@ const ClientHome = () => {
         }
       }; 
     
-      fetchUserName();
+      fetchUserName(); */
     // Dummy data for now:
     setProjects([
       { title: 'Website Redesign', budget: '$1,200', deadline: '2025-04-20', status: 'Active' },
@@ -61,7 +63,7 @@ const ClientHome = () => {
 
   return (
     <div>
-      <WelcomeBanner name={userName} />
+      <WelcomeBanner name={user?.name || 'Client'} />
       <StatsOverview stats={stats} />
       <ProjectTable projects={projects} />
     </div>

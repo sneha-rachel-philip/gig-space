@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from '../../services/axiosInstance';
+import { postJob } from '../../services/apiRoutes'; 
 import { useNavigate } from 'react-router-dom';
 
 const PostJob = () => {
@@ -40,7 +40,7 @@ const PostJob = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await axios.post('/jobs', formData);
+      const res = await postJob(formData);
       navigate(`/client/jobs/${res.data._id}`); // redirect to job detail after posting
     } catch (err) {
       console.error('Job post error:', err);

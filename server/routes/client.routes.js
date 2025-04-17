@@ -3,6 +3,7 @@ import {
   postJob,
   updateJobStatus,
   getJobsByClient,
+  updateJob,
 } from '../controllers/job.controller.js';
 
 import { authenticate } from '../middlewares/authMiddleware.js';
@@ -18,6 +19,8 @@ router.post('/jobs', postJob);
 
 // GET /api/client/jobs
 router.get('/jobs', getJobsByClient);
+
+router.put('/jobs/:id', updateJob); // Protect this route
 
 // PUT /api/client/jobs/:id/status
 router.put('/jobs/:id/status', updateJobStatus);

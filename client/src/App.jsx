@@ -24,6 +24,9 @@ import JobList from './pages/Jobs/JobList';
 import PostJob from './pages/Jobs/PostJob';
 import EditJob from './pages/Jobs/EditJob';
 
+// Freelancer Dashboard
+import FreelancerHome from './pages/FreelancerDashboard/FreelancerHome';
+
 
 function App() {
   return (
@@ -62,6 +65,23 @@ function App() {
             <Route path="edit-job/:id" element={<EditJob />} />
 
           </Route>
+
+          {/* Freelancer Dashboard (Protected if needed later) */}
+          <Route
+            path="/freelancer"
+            element={
+              <PrivateRoute allowedRoles={['freelancer']}>
+                <ClientDashboardLayout />
+              </PrivateRoute>
+            }
+          >
+            <Route path="home" element={<FreelancerHome />} />
+            {/* <Route path="projects" element={<FreelancerProjects />} />
+            <Route path="payments" element={<FreelancerPayments />} />
+            <Route path="messages" element={<FreelancerMessages />} />
+            <Route path="jobs" element={<ClientJobs />} />
+            <Route path="jobs/:id" element={<JobDetails />} /> */}
+          </Route>    
 
         </Routes>
       </Router>

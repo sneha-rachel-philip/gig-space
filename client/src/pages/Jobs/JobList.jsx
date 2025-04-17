@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from "../../services/axiosInstance";
+import { getJobs } from '../../services/apiRoutes';
 //import { useSearchParams } from 'react-router-dom';
 
 const categories = ['Design', 'Development', 'Writing', 'Marketing'];
@@ -9,11 +9,15 @@ const JobList = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(false);
 
+    // Fetch jobs by category and pagination
   const fetchJobs = async (category) => {
     setLoading(true);
     try {
-      const res = await axios.get(`/jobs?category=${category}`);
-      setJobs(res.data);
+      // Build the query string dynamically based on the selected category
+      const queryParams = category ? `?category=${category}` : '';
+
+      const res = await getJobs(queryParams);  // Use the getJobs function from apiroutes.js
+      setJobs(res.data.jobs);
     } catch (err) {
       console.error('Error fetching jobs:', err);
     }
@@ -21,7 +25,11 @@ const JobList = () => {
   };
 
   useEffect(() => {
-    if (selectedCategory) fetchJobs(selectedCategory);
+    if (selectedCategory) {
+      fetchJobs(selectedCategory);  // Fetch jobs when a category is selected
+    } else {
+      fetchJobs();  // Fetch all jobs if no category is selected
+    }
   }, [selectedCategory]);
 
   return (

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
-import axios from '../../services/axiosInstance';
+import { getJobsByClient, updateJobStatus } from '../../services/apiRoutes';  // Import the API functions
 
 const ClientJobs = () => {
   const [openJobs, setOpenJobs] = useState([]);
@@ -14,7 +14,7 @@ const ClientJobs = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await axios.get('/client/jobs');
+        const res = await getJobsByClient();
         const allJobs = res.data;
 
         const open = allJobs.filter(job => job.status === 'open');
@@ -40,9 +40,9 @@ const ClientJobs = () => {
   
   const handleProposal = async (jobId, freelancerId, action) => {
     try {
-      await axios.post(`/client/jobs/${jobId}/proposal/${freelancerId}/${action}`);
+      await updateJobStatus(jobId, { status: action }); 
       // Refresh jobs
-      const res = await axios.get('/client/jobs');
+      const res = await getJobsByClient();
       const allJobs = res.data;
   
       const open = allJobs.filter(job => job.status === 'open');

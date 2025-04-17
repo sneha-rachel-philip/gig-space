@@ -24,10 +24,6 @@ const Sidebar = ({ role }) => {
           <FaHome /> Home
         </NavLink>
 
-        <NavLink to={`/${role}/projects`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
-          <FaFolderOpen /> Projects
-        </NavLink>
-
         <NavLink to={`/${role}/payments`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
           <FaMoneyBill /> Payments
         </NavLink>
@@ -36,14 +32,19 @@ const Sidebar = ({ role }) => {
           <FaEnvelope /> Messages
         </NavLink>
 
-        {role === 'client' && (
+        <NavLink to={`/${role}/jobs`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
+          <FaEnvelope /> Manage Jobs
+        </NavLink>
+
+
+        {/* {role === 'client' && (
           <NavLink
             to="/client/jobs"
             className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}
           >
             <FaBriefcase /> Manage Jobs
           </NavLink>
-        )}
+        )} */}
       </nav>
     </aside>
   );

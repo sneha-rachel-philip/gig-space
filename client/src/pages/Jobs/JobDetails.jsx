@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from '../../services/axiosInstance'; // assuming axios is set up
-
+import {
+  getJobById,
+  getCurrentUser,
+  applyForJob,
+  deleteJob,
+  closeJob,
+} from '../../services/apiRoutes';
 const JobDetails = () => {
   const { id } = useParams(); // Get the job ID from the URL
   const [job, setJob] = useState(null);
@@ -12,7 +17,7 @@ const JobDetails = () => {
     // Fetch job details by ID
     const fetchJobDetails = async () => {
       try {
-        const response = await axios.get(`/jobs/${id}`);
+        const response = await getJobById(id);
         setJob(response.data);
       } catch (error) {
         console.error('Error fetching job details:', error);
@@ -22,7 +27,7 @@ const JobDetails = () => {
     // Fetch user role from the auth context or an API
     const fetchUserRole = async () => {
       try {
-        const response = await axios.get('/auth/user'); // Example API to get user role
+        const response = await getCurrentUser(); // Example API to get user role
         setUserRole(response.data.role);
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -33,9 +38,29 @@ const JobDetails = () => {
     fetchUserRole();
   }, [id]);
 
-  if (!job) {
-    return <p>Loading job details...</p>;
-  }
+  const handleJobAction = async (action) => {
+    try {
+      if (action === 'apply') {
+        await applyForJob(id);
+        alert('Successfully applied for the job!');
+      } else if (action === 'delete') {
+        await deleteJob(id);
+        alert('Job deleted successfully!');
+        navigate(userRole === 'admin' ? '/admin/jobs' : '/client/dashboard');
+      } else if (action === 'close') {
+        await closeJob(id);
+        alert('Job closed successfully!');
+      } else if (action === 'edit') {
+        navigate(`/admin/edit-job/${id}`);
+      }
+    } catch (error) {
+      console.error(`Error performing action (${action}):`, error);
+      alert(`Something went wrong while trying to ${action} the job.`);
+    }
+  };
+
+  if (!job) return <p>Loading job details...</p>;
+
 
   return (
     <div className="max-w-5xl mx-auto mt-6 p-4">
@@ -99,43 +124,7 @@ const JobDetails = () => {
         </div>
     );
 
-  function handleJobAction(action) {
-    if (action === 'close') {
-      // Call an API to close the job
-      axios.put(`/jobs/${id}/status`, { status: 'closed' })
-        .then(response => {
-          alert('Job closed successfully', response);
-        })
-        .catch(error => {
-          alert('Error closing job', error);
-        });
-    } else if (action === 'apply') {
-      // Call an API to apply for the job
-      axios.post(`/jobs/${id}/apply`)
-        .then(response => {
-          alert('Successfully applied for the job', response);
-        })
-        .catch(error => {
-          alert('Error applying for the job', error);
-        });
-    } else if (action === 'edit') {
-      navigate(`/admin/edit-job/${id}`);
-    } else if (action === 'delete') {
-      // Call an API to delete the job
-      axios.delete(`/jobs/${id}`)
-        .then(response => {
-          alert('Job deleted successfully', response);
-          if (userRole === 'admin') {
-            navigate('/admin/jobs');
-          } else {
-            navigate('/client/dashboard');
-          }          
-        })
-        .catch(error => {
-          alert('Error deleting the job', error);
-        });
-    }
-  }
+  
 };
 
 export default JobDetails;

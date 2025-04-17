@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from '../../services/axiosInstance';
+import { getJobById, updateJob } from '../../services/apiRoutes';
 
 const EditJob = () => {
   const { id } = useParams(); // get job ID from URL
@@ -17,7 +17,7 @@ const EditJob = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await axios.get(`/jobs/${id}`);
+        const res = await getJobById(id); 
         const { title, description, budget, skillsRequired } = res.data;
 
         setFormData({
@@ -53,10 +53,11 @@ const EditJob = () => {
         ...formData,
         skillsRequired: formData.skillsRequired.split(',').map(s => s.trim()),
       };
+      //console.log("Updating job with:", updatedJob);
 
-      await axios.put(`/jobs/${id}`, updatedJob);
+      await updateJob(id, updatedJob);
       alert('Job updated successfully!');
-      navigate('/client/dashboard'); // or wherever your jobs list is
+      navigate('/client/jobs'); // or wherever your jobs list is
     } catch (err) {
       console.error('Error updating job:', err);
       alert('Failed to update job.');
