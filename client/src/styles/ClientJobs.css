@@ -1,0 +1,141 @@
+/* ClientJobs.css */
+
+.client-jobs-container {
+    max-width: 72rem;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #f9fafb;
+  }
+  
+  .jobs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .jobs-header h1 {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #1f2937;
+  }
+  
+  .post-job-button {
+    background-color: #2563eb;
+    color: #fff;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .post-job-button:hover {
+    background-color: #1d4ed8;
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #111827;
+  }
+  
+  .job-card {
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  }
+  
+  .job-card h3 {
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .job-card p {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  .proposal-section {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .proposal-section h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .proposal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.75rem;
+    background-color: #fefefe;
+  }
+  
+  .proposal-item p {
+    margin: 0;
+  }
+  
+  .proposal-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .accept-btn,
+  .reject-btn {
+    font-size: 0.875rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .accept-btn {
+    background-color: #16a34a;
+  }
+  
+  .accept-btn:hover {
+    background-color: #15803d;
+  }
+  
+  .reject-btn {
+    background-color: #dc2626;
+  }
+  
+  .reject-btn:hover {
+    background-color: #b91c1c;
+  }
+  
+  .pagination {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .pagination button {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    color: #1d4ed8;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .pagination button.active {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+  }
+  

@@ -3,6 +3,7 @@ import WelcomeBanner from '../../components/WelcomeBanner';
 import StatsOverview from '../../components/StatsOverview';
 import ProjectTable from '../../components/ProjectTable';
 import { useAuth } from '../../context/useAuth';
+import '../../styles/ClientHome.css';
 
 
 const ClientHome = () => {
@@ -62,12 +63,21 @@ const ClientHome = () => {
   }, []);
 
   return (
-    <div>
-      <WelcomeBanner name={user?.name || 'Client'} />
-      <StatsOverview stats={stats} />
-      <ProjectTable projects={projects} />
+    <div className="client-home">
+      <div className="welcome-banner">
+        <WelcomeBanner name={user?.name || 'Client'} />
+      </div>
+  
+      <div className="stats-overview">
+        <StatsOverview stats={stats} />
+      </div>
+  
+      <div className="project-table-wrapper">
+        <ProjectTable projects={projects} />
+      </div>
     </div>
   );
+  
 };
 
 export default ClientHome;

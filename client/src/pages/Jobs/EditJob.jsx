@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getJobById, updateJob } from '../../services/apiRoutes';
+import styles from '../../styles/EditJob.module.css';
 
 const EditJob = () => {
-  const { id } = useParams(); // get job ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -17,16 +18,14 @@ const EditJob = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await getJobById(id); 
+        const res = await getJobById(id);
         const { title, description, budget, skillsRequired } = res.data;
-
         setFormData({
           title,
           description,
           budget,
-          skillsRequired: skillsRequired.join(', '), // convert array to comma string for form
+          skillsRequired: skillsRequired.join(', '),
         });
-
         setLoading(false);
       } catch (err) {
         console.error('Error fetching job:', err);
@@ -47,17 +46,14 @@ const EditJob = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-
     try {
       const updatedJob = {
         ...formData,
         skillsRequired: formData.skillsRequired.split(',').map(s => s.trim()),
       };
-      //console.log("Updating job with:", updatedJob);
-
       await updateJob(id, updatedJob);
       alert('Job updated successfully!');
-      navigate('/client/jobs'); // or wherever your jobs list is
+      navigate('/client/jobs');
     } catch (err) {
       console.error('Error updating job:', err);
       alert('Failed to update job.');
@@ -67,70 +63,58 @@ const EditJob = () => {
   if (loading) return <p>Loading job...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto mt-6 p-4 border rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Edit Job</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-
-        <div>
-          <label className="block font-medium">Title</label>
+    <div className={styles.editJobContainer}>
+      <h2 className={styles.heading}>Edit Job</h2>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.inputGroup}>
+          <label>Title</label>
           <input
             type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
             required
           />
         </div>
 
-        <div>
-          <label className="block font-medium">Description</label>
+        <div className={styles.inputGroup}>
+          <label>Description</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
             rows="4"
             required
           />
         </div>
 
-        <div>
-          <label className="block font-medium">Budget (USD)</label>
+        <div className={styles.inputGroup}>
+          <label>Budget (USD)</label>
           <input
             type="number"
             name="budget"
             value={formData.budget}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
             required
           />
         </div>
 
-        <div>
-          <label className="block font-medium">Skills (comma separated)</label>
+        <div className={styles.inputGroup}>
+          <label>Skills (comma separated)</label>
           <input
             type="text"
             name="skillsRequired"
             value={formData.skillsRequired}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
             required
           />
         </div>
 
-        <div className="flex gap-4 mt-4">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
+        <div className={styles.buttonGroup}>
+          <button type="submit" className={styles.saveBtn}>
             Save Changes
           </button>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-          >
+          <button type="button" onClick={() => navigate(-1)} className={styles.cancelBtn}>
             Cancel
           </button>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { postJob } from '../../services/apiRoutes'; 
 import { useNavigate } from 'react-router-dom';
-
+import '../../styles/PostJob.css'; // Assuming you have a CSS file for styling
 const PostJob = () => {
   const navigate = useNavigate();
 
@@ -48,183 +48,146 @@ const PostJob = () => {
   };
 
   return (
-  <div className="max-w-3xl mx-auto mt-8 p-6 bg-white rounded-xl shadow">
-    <h2 className="text-2xl font-semibold mb-4">Post a New Job</h2>
-    <form onSubmit={handleSubmit} className="space-y-4">
-
-      {/* Job Title */}
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-          Job Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          placeholder="Job Title"
-          value={formData.title}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-      </div>
-
-      {/* Date Inputs */}
-      <div className="flex gap-4">
-        <div className="w-1/2">
-          <label htmlFor="acceptedTill" className="block text-sm font-medium text-gray-700 mb-1">
-            Accepting Proposals Till
-          </label>
+    <div className="post-job-container">
+      <h2>Post a New Job</h2>
+      <form onSubmit={handleSubmit} className="post-job-form">
+        <div>
+          <label htmlFor="title">Job Title</label>
           <input
-            type="date"
-            id="acceptedTill"
-            name="acceptedTill"
-            value={formData.acceptedTill}
+            type="text"
+            id="title"
+            name="title"
+            placeholder="Job Title"
+            value={formData.title}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
             required
           />
         </div>
 
-        <div className="w-1/2">
-          <label htmlFor="completedBy" className="block text-sm font-medium text-gray-700 mb-1">
-            Expected Completion By
-          </label>
-          <input
-            type="date"
-            id="completedBy"
-            name="completedBy"
-            value={formData.completedBy}
+        <div className="date-category-container">
+          <div>
+            <label htmlFor="acceptedTill">Accepting Proposals Till</label>
+            <input
+              type="date"
+              id="acceptedTill"
+              name="acceptedTill"
+              value={formData.acceptedTill}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="completedBy">Expected Completion By</label>
+            <input
+              type="date"
+              id="completedBy"
+              name="completedBy"
+              value={formData.completedBy}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="category">Job Category</label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">Select Category</option>
+            <option value="Web Development">Web Development</option>
+            <option value="Design">Design</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Writing">Writing</option>
+            <option value="Data Analysis">Data Analysis</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="skills">Skills Required</label>
+          <div className="flex-gap-2">
+            <input
+              id="skills"
+              type="text"
+              value={skillInput}
+              onChange={e => setSkillInput(e.target.value)}
+              placeholder="Enter skill"
+            />
+            <button
+              type="button"
+              onClick={addSkill}
+              className="btn btn-primary"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex-wrap">
+            {formData.skillsRequired.map((skill, idx) => (
+              <span key={idx} className="skill-tag">{skill}</span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="milestones">Project Milestones</label>
+          <div className="flex-gap-2">
+            <input
+              id="milestones"
+              type="text"
+              value={milestoneInput}
+              onChange={e => setMilestoneInput(e.target.value)}
+              placeholder="Enter milestone"
+            />
+            <button
+              type="button"
+              onClick={addMilestone}
+              className="btn btn-primary"
+            >
+              Add
+            </button>
+          </div>
+          <ul>
+            {formData.milestones.map((milestone, idx) => (
+              <li key={idx} className="milestone-tag">{milestone}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <label htmlFor="description">Job Description</label>
+          <textarea
+            id="description"
+            name="description"
+            placeholder="Job Description"
+            value={formData.description}
+            onChange={handleChange}
             required
           />
         </div>
-      </div>
 
-      {/* Category */}
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-          Job Category
-        </label>
-        <select
-          id="category"
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="">Select Category</option>
-          <option value="Web Development">Web Development</option>
-          <option value="Design">Design</option>
-          <option value="Marketing">Marketing</option>
-          <option value="Writing">Writing</option>
-          <option value="Data Analysis">Data Analysis</option>
-        </select>
-      </div>
-
-      {/* Skills Input */}
-      <div>
-        <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
-          Skills Required
-        </label>
-        <div className="flex gap-2">
+        <div>
+          <label htmlFor="budget">Project Budget</label>
           <input
-            id="skills"
-            type="text"
-            value={skillInput}
-            onChange={e => setSkillInput(e.target.value)}
-            className="flex-grow p-2 border rounded"
-            placeholder="Enter skill"
+            type="number"
+            id="budget"
+            name="budget"
+            placeholder="Project Budget"
+            value={formData.budget}
+            onChange={handleChange}
+            required
           />
-          <button
-            type="button"
-            onClick={addSkill}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Add
-          </button>
         </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {formData.skillsRequired.map((skill, idx) => (
-            <span key={idx} className="bg-gray-200 px-3 py-1 rounded-full text-sm">{skill}</span>
-          ))}
-        </div>
-      </div>
 
-      {/* Milestones Input */}
-      <div>
-        <label htmlFor="milestones" className="block text-sm font-medium text-gray-700 mb-1">
-          Project Milestones
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="milestones"
-            type="text"
-            value={milestoneInput}
-            onChange={e => setMilestoneInput(e.target.value)}
-            className="flex-grow p-2 border rounded"
-            placeholder="Enter milestone"
-          />
-          <button
-            type="button"
-            onClick={addMilestone}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Add
-          </button>
-        </div>
-        <ul className="mt-2 list-disc list-inside">
-          {formData.milestones.map((milestone, idx) => (
-            <li key={idx}>{milestone}</li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Job Description */}
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-          Job Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          placeholder="Job Description"
-          value={formData.description}
-          onChange={handleChange}
-          className="w-full p-2 border rounded h-32"
-          required
-        />
-      </div>
-
-      {/* Budget */}
-      <div>
-        <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">
-          Project Budget
-        </label>
-        <input
-          type="number"
-          id="budget"
-          name="budget"
-          placeholder="Project Budget"
-          value={formData.budget}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-      >
-        Post Job
-      </button>
-    </form>
-  </div>
-
+        <button type="submit" className="submit-btn">
+          Post Job
+        </button>
+      </form>
+    </div>
   );
 };
 

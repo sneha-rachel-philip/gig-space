@@ -1,0 +1,46 @@
+/* Sidebar.css */
+
+.sidebar {
+    width: 250px; /* Fixed width */
+    background-color: #fff;
+    /* height: 100vh;  */
+    position: sticky;
+    top: 0; /* Keeps it sticky on scroll */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+  }
+  
+  nav {
+    display: flex;
+    flex-direction: column; /* Ensures links are displayed vertically */
+    gap: 1rem;
+  }
+  
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    color: #333;
+  }
+  
+  nav a:hover {
+    background-color: #f1f1f1;
+  }
+  
+  nav a.active {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  nav a svg {
+    font-size: 1.25rem;
+  }
+  

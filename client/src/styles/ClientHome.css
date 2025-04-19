@@ -1,0 +1,74 @@
+/* ClientHome.css */
+
+.client-home {
+    padding: 2rem;
+    background-color: #f7f9fc;
+    min-height: 100vh;
+  }
+  
+  /* Welcome banner styles */
+  .welcome-banner {
+    margin-bottom: 2rem;
+  }
+  
+  /* Stats overview styles */
+  .stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  /* Stat card */
+  .stat-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+  }
+  
+  .stat-card h3 {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #111827;
+  }
+  
+  /* Project table */
+  .project-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  .project-table th,
+  .project-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .project-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  .project-table td {
+    color: #444;
+  }
+  
+  .project-table tr:hover {
+    background-color: #f1f5f9;
+    transition: background 0.3s ease;
+  }
+  

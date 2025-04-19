@@ -7,6 +7,8 @@ import {
   FaPlusCircle,
   FaBriefcase,
 } from 'react-icons/fa';
+import '../styles/Sidebar.css';
+
 
 const Sidebar = ({ role }) => {
   const linkStyle =
@@ -15,9 +17,9 @@ const Sidebar = ({ role }) => {
 
   return (
     <aside className="w-64 bg-white shadow-md h-screen sticky top-0 p-4">
-      <h2 className="text-xl font-bold mb-6">
+      {/* <h2 className="text-xl font-bold mb-6">
         {role === 'freelancer' ? 'Freelancer' : 'Client'} Dashboard
-      </h2>
+      </h2> */}
 
       <nav className="flex flex-col gap-2">
         <NavLink to={`/${role}/home`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>

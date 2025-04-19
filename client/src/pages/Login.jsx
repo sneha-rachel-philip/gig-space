@@ -4,6 +4,8 @@ import { toast } from 'react-toastify'; // for toast notifications
 import { loginUser } from '../services/apiRoutes';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import '../styles/Login.css';
+
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -62,39 +64,41 @@ function Login() {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Email:</label><br />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label><br />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit"disabled={loading}>
-           {loading ? 'Logging in...' : 'Login'}
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
-
-      <p>
-        Forgot your password? <a href="#">Reset here</a><br />
-        Don't have an account? <Link to="/signup">Sign up</Link>
-      </p>
+    <div className="login-container">
+      <div className="login-card">
+        <h2>Login</h2>
+        <form onSubmit={handleLogin}>
+          <div>
+            <label>Email:</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label>Password:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error && <p className="error-message">{error}</p>}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+  
+        <p>
+          Forgot your password? <a href="#">Reset here</a><br />
+          Don't have an account? <Link to="/signup">Sign up</Link>
+        </p>
+      </div>
     </div>
   );
+  
 }
-
 export default Login;

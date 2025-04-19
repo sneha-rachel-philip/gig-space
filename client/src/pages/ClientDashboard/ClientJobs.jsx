@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+//import { Link } from 'react-router-dom';
+import '../../styles/ClientJobs.css';
+
 
 import { getJobsByClient, updateJobStatus } from '../../services/apiRoutes';  // Import the API functions
 
@@ -58,7 +60,7 @@ const ClientJobs = () => {
   };
   
   return (
-    <div className="max-w-5xl mx-auto mt-6 p-4">
+    <div className="client-jobs-container">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Jobs</h1>
         <button

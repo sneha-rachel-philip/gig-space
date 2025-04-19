@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { registerUser } from '../services/apiRoutes';
+import '../styles/Signup.css';
+
 
 function Signup() {
   const [name, setName] = useState('');
@@ -35,67 +37,70 @@ function Signup() {
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSignup}>
-        <div>
-          <label>Name:</label><br />
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Email:</label><br />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Password:</label><br />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Confirm Password:</label><br />
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Role:</label><br />
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="freelancer">Freelancer</option>
-            <option value="client">Client</option>
-          </select>
-        </div>
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Signing up...' : 'Sign Up'}
-        </button>
-      </form>
-
-      <p>
-        Already have an account? <a href="/">Login here</a>
-      </p>
+    <div className="signup-container">
+      <div className="signup-card">
+        <h2>Sign Up</h2>
+        <form onSubmit={handleSignup}>
+          <div>
+            <label>Name:</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+  
+          <div>
+            <label>Email:</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+  
+          <div>
+            <label>Password:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+  
+          <div>
+            <label>Confirm Password:</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+  
+          <div>
+            <label>Role:</label>
+            <select value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="freelancer">Freelancer</option>
+              <option value="client">Client</option>
+            </select>
+          </div>
+  
+          <button type="submit" disabled={loading}>
+            {loading ? 'Signing up...' : 'Sign Up'}
+          </button>
+        </form>
+  
+        <p>
+          Already have an account? <a href="/">Login here</a>
+        </p>
+      </div>
     </div>
   );
+  
 }
 
 export default Signup;
