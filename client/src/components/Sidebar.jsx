@@ -1,14 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import {
   FaHome,
-  FaFolderOpen,
   FaMoneyBill,
   FaEnvelope,
-  FaPlusCircle,
   FaBriefcase,
+  FaFolderOpen,
 } from 'react-icons/fa';
 import '../styles/Sidebar.css';
-
 
 const Sidebar = ({ role }) => {
   const linkStyle =
@@ -17,10 +15,6 @@ const Sidebar = ({ role }) => {
 
   return (
     <aside className="w-64 bg-white shadow-md h-screen sticky top-0 p-4">
-      {/* <h2 className="text-xl font-bold mb-6">
-        {role === 'freelancer' ? 'Freelancer' : 'Client'} Dashboard
-      </h2> */}
-
       <nav className="flex flex-col gap-2">
         <NavLink to={`/${role}/home`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
           <FaHome /> Home
@@ -35,18 +29,9 @@ const Sidebar = ({ role }) => {
         </NavLink>
 
         <NavLink to={`/${role}/jobs`} className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}>
-          <FaEnvelope /> Manage Jobs
+          <FaBriefcase /> My Jobs
         </NavLink>
-
-
-        {/* {role === 'client' && (
-          <NavLink
-            to="/client/jobs"
-            className={({ isActive }) => `${linkStyle} ${isActive ? activeStyle : ''}`}
-          >
-            <FaBriefcase /> Manage Jobs
-          </NavLink>
-        )} */}
+        
       </nav>
     </aside>
   );

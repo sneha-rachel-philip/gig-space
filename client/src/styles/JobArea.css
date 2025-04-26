@@ -1,0 +1,40 @@
+.job-area {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    font-family: Arial, sans-serif;
+  }
+  
+  .job-area h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .job-description {
+    color: #444;
+    margin-bottom: 1.5rem;
+  }
+  
+  .job-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .job-section h2 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 0.75rem;
+  }
+  
+  .job-section ul {
+    padding-left: 1.25rem;
+  }
+  
+  .job-section li {
+    margin-bottom: 0.5rem;
+  }
+  

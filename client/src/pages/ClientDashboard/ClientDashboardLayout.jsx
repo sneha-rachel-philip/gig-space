@@ -1,8 +1,7 @@
 import React from 'react';
 import Sidebar from '../../components/Sidebar';
 import { Outlet } from 'react-router-dom';
-import '../../styles/ClientDashboardLayout.css'; // Assuming you have a CSS file for styling
-//import '../../styles/Sidebar.css'; // Assuming you have a CSS file for styling
+import '../../styles/ClientDashboardLayout.css'; 
 const ClientDashboardLayout = () => {
   return (
     <div className="dashboard-container">

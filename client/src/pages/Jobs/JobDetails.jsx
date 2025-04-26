@@ -6,7 +6,12 @@ import {
   applyForJob,
   deleteJob,
   closeJob,
+  submitProposal,
 } from '../../services/apiRoutes';
+import '../../styles/JobDetails.css';
+
+
+
 const JobDetails = () => {
   const { id } = useParams(); // Get the job ID from the URL
   const [job, setJob] = useState(null);
@@ -59,72 +64,119 @@ const JobDetails = () => {
     }
   };
 
+
+
+  const [proposalText, setProposalText] = useState('');
+  const [proposedBudget, setProposedBudget] = useState('');
+  const [proposedDuration, setProposedDuration] = useState('');
+  const [submitMessage, setSubmitMessage] = useState('');
+
+  const handleProposalSubmit = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const response = await submitProposal({
+        jobId: id,
+        proposalText,
+        proposedBudget,
+        proposedDuration,
+      });
+      console.log('Proposal response:', response.data);
+      setSubmitMessage('Proposal submitted successfully!');
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error || 'Failed to submit proposal.';
+      setSubmitMessage(errorMessage);
+    }
+  };
+  
   if (!job) return <p>Loading job details...</p>;
 
 
+
   return (
-    <div className="max-w-5xl mx-auto mt-6 p-4">
-      <h2 className="text-2xl font-semibold">{job.title}</h2>
+    <div className="job-details-container">
+      <h2>{job.title}</h2>
       <p>{job.description}</p>
       <p><strong>Budget:</strong> ${job.budget}</p>
       <p><strong>Skills Required:</strong> {job.skillsRequired.join(', ')}</p>
 
-      {userRole === 'client' ? 
-        <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-2">Proposals</h3>
-        <ul className="space-y-2">
-        {job.freelancers.map((freelancer) => (
-            <li key={freelancer._id} className="flex justify-between items-center border p-2 rounded">
-            <div>
-                <p>{freelancer.name}</p>
-                <p className="text-sm text-gray-500">{freelancer.email}</p>
-            </div>
-            {/* Optional: View proposal button, or move to ClientJobs */}
-            </li>
-        ))}
-        </ul>
+      {userRole === 'client' ? (
+        <div className="proposals-section">
+          <h3>Proposals</h3>
+          <ul className="proposals-list">
+            {job.freelancers.map((freelancer) => (
+              <li key={freelancer._id} className="proposal-item">
+                <div>
+                  <p>{freelancer.name}</p>
+                  <p className="email">{freelancer.email}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 mt-4">
-        <button
-            onClick={() => navigate(`/client/edit-job/${id}`)}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-        >
-            Edit Job
-        </button>
-        <button
-            onClick={() => handleJobAction('delete')}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-            Delete Job
-        </button>
-        </div>
-        </div>
-
-  : userRole === 'freelancer' ? (
-            <div className="mt-6">
+          <div className="button-group">
             <button
-                onClick={() => handleJobAction('apply')}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={() => navigate(`/client/edit-job/${id}`)}
+              className="button button-yellow"
             >
-                Apply for Job
+              Edit Job
             </button>
-            </div>
-        ) : userRole === 'admin' ? (
-            <div className="mt-6">
             <button
-                onClick={() => handleJobAction('close')}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={() => handleJobAction('delete')}
+              className="button button-red"
             >
-                Close Job
+              Delete Job
             </button>
-            </div>
-        ) : null}
-    
+          </div>
         </div>
-    );
+      ) : userRole === 'freelancer' ? (
+        <div className="bid-form-container">
+          <h3>Place Your Bid</h3>
+          <form onSubmit={handleProposalSubmit} className="bid-form">
+            <textarea
+              placeholder="Proposal details..."
+              value={proposalText}
+              onChange={(e) => setProposalText(e.target.value)}
+              required
+            />
+            <input
+              type="number"
+              placeholder="Proposed Budget ($)"
+              value={proposedBudget}
+              onChange={(e) => setProposedBudget(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Proposed Duration (e.g., 5 days)"
+              value={proposedDuration}
+              onChange={(e) => setProposedDuration(e.target.value)}
+              required
+            />
+            <button type="submit" className="button button-blue">
+              Submit Proposal
+            </button>
+          </form>
+          {submitMessage && <p className="submit-message">{submitMessage}</p>}
+        </div>
+      ) : userRole === 'admin' ? (
+        <div className="admin-controls">
+          <button
+            onClick={() => handleJobAction('close')}
+            className="button button-green"
+          >
+            Close Job
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
 
   
 };
+
+
+
 
 export default JobDetails;

@@ -11,17 +11,24 @@ export const deleteUser = (userId) => axiosInstance.delete(`/admin/users/${userI
 // Client routes
 export const postJob = (jobData) => axiosInstance.post('/client/jobs', jobData);
 export const getJobsByClient = () => axiosInstance.get('/client/jobs');
-export const updateJobStatus = (jobId, status) => axiosInstance.put(`/client/jobs/${jobId}/status`, { status });
+export const updateJobStatus = (jobId, data) =>axiosInstance.put(`/client/jobs/${jobId}/status`, data);
 export const updateJob = (jobId, updatedData) => axiosInstance.put(`/client/jobs/${jobId}`, updatedData);
 
 
 // Job routes
-export const getJobs = () => axiosInstance.get('/jobs');
+//export const getJobs = () => axiosInstance.get('/jobs');
+// apiRoutes.js
+export const getJobsByCategory = (filters) => axiosInstance.get('/jobs/category', { params: filters });
+  
+export const getJobs = (params) => axiosInstance.get('/jobs', { params });
 export const getJobById = (jobId) => axiosInstance.get(`/jobs/${jobId}`);
 export const applyForJob = (jobId) => axiosInstance.post(`/jobs/${jobId}/apply`);
 export const deleteJob = (jobId) => axiosInstance.delete(`/jobs/${jobId}`);
 export const closeJob = (jobId) => axiosInstance.put(`/jobs/${jobId}/status`, { status: 'closed' });
+// File upload
+export const uploadJobFile = (jobId, formData) => axiosInstance.post(`/jobs/${jobId}/upload`, formData, {headers: { 'Content-Type': 'multipart/form-data' }, });
 
+  
 // Contract routes
 export const createContract = (data) => axiosInstance.post('/contract/create', data);
 export const getContractsForFreelancer = () => axiosInstance.get('/contract/freelancer');

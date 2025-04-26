@@ -1,9 +1,10 @@
 import Job from '../models/job.model.js';
 import User from '../models/user.model.js';
 
+
 // POST /api/jobs - Post a new job
 export const postJob = async (req, res) => {
-  const { title, description, budget, skillsRequired } = req.body;
+  const { title, category, acceptedTill, completedBy, milestones, description, budget, skillsRequired } = req.body;
   try {
     // Ensure the user is a client
     if (req.user.role !== 'client') {
@@ -12,6 +13,10 @@ export const postJob = async (req, res) => {
 
     const job = new Job({
       title,
+      category,
+      acceptedTill,
+      completedBy, 
+      milestones,
       description,
       budget,
       skillsRequired,
@@ -25,28 +30,74 @@ export const postJob = async (req, res) => {
   }
 };
 
+// GET /api/jobs/category?category=Development
+export const getJobsByCategory = async (req, res) => {
+  try {
+    const category = req.query.category;
+
+    if (!category) {
+      return res.status(400).json({ error: 'Category is required.' });
+    }
+
+    const jobs = await Job.find({ category })
+      .populate('client', 'name email')
+      .populate('freelancers', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ jobs });
+  } catch (err) {
+    console.error('Error fetching category jobs:', err);
+    res.status(500).json({ error: 'Error fetching jobs by category.' });
+  }
+};
+
+
 // GET /api/jobs - Get all jobs
 export const getJobs = async (req, res) => {
   try {
-    // Filter by category if provided
     const filter = {};
+
+    // Category filter
     if (req.query.category) {
       filter.category = req.query.category;
     }
 
-    // Handle pagination parameters
+    // Search (title or description)
+    if (req.query.search) {
+      const regex = new RegExp(req.query.search, 'i');
+      filter.$or = [
+        { title: regex },
+        { description: regex }
+      ];
+    }
+
+    // Budget range
+    if (req.query.minBudget || req.query.maxBudget) {
+      filter.budget = {};
+      if (req.query.minBudget) filter.budget.$gte = parseInt(req.query.minBudget);
+      if (req.query.maxBudget) filter.budget.$lte = parseInt(req.query.maxBudget);
+    }
+
+    // Skills
+    if (req.query.skills) {
+      const skillsArray = req.query.skills.split(',').filter(Boolean); // Filter out empty strings
+      if (skillsArray.length) {
+        filter.skillsRequired = { $in: skillsArray };
+      }
+    }
+
+    // Pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Fetch jobs with pagination and filtering
     const jobs = await Job.find(filter)
       .skip(skip)
       .limit(limit)
       .populate('client', 'name email')
       .populate('freelancers', 'name email');
 
-    const totalJobs = await Job.countDocuments(filter);  // Count all jobs with the filter applied
+    const totalJobs = await Job.countDocuments(filter);
 
     res.json({
       jobs,
@@ -55,15 +106,20 @@ export const getJobs = async (req, res) => {
       pages: Math.ceil(totalJobs / limit),
     });
   } catch (err) {
+    console.error('Error fetching jobs:', err);
     res.status(500).json({ error: 'Error fetching jobs.' });
   }
 };
 
 
+
 // GET /api/jobs/:id - Get job details by ID
 export const getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate('client', 'name email').populate('freelancers', 'name email');
+    const job = await Job.findById(req.params.id)
+    .populate('client', 'name email')
+    .populate('assignedFreelancer', 'name email');
+    
     if (!job) {
       return res.status(404).json({ error: 'Job not found.' });
     }
@@ -75,8 +131,9 @@ export const getJobById = async (req, res) => {
 
 // PUT /api/jobs/:id/status - Update job status (open/closed)
 export const updateJobStatus = async (req, res) => {
-  const { status } = req.body;
-
+  const { status, freelancerId } = req.body;
+  console.log('req.body:', req.body);
+  console.log(status.status, status.freelancerId);
   try {
     const job = await Job.findById(req.params.id);
     if (!job) {
@@ -87,10 +144,22 @@ export const updateJobStatus = async (req, res) => {
       return res.status(403).json({ error: 'You are not authorized to change the job status.' });
     }
 
-    job.status = status;
+      // If status is 'accepted', assign the freelancer to the job
+      if (status === 'accept' && freelancerId) {
+        job.status = 'inprogress'; // Update status to inprogress
+        job.assignedFreelancer = freelancerId;  // Assign the freelancer to the job
+      } else {
+        job.status = status;  // Update status (open/closed)
+      }
+       // Save the job with the updates
     await job.save();
-    const updatedJob = await Job.findById(job._id).populate('client', 'name email').populate('freelancers', 'name email');
-    res.json(updatedJob);
+
+    // Populate necessary fields to send back in the response
+    const updatedJob = await Job.findById(job._id)
+      .populate('client', 'name email')
+      .populate('freelancers', 'name email');
+
+    res.json(updatedJob);  // Return the updated job
   } catch (err) {
     res.status(500).json({ error: 'Error updating job status.' });
   }
@@ -127,8 +196,29 @@ export const updateJob = async (req, res) => {
   }
 };
 
+
+export const uploadJobFile = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    job.files.push({
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      uploader: req.user._id
+    });
+
+    await job.save();
+
+    res.status(200).json({ message: 'File uploaded successfully', file: req.file });
+  } catch (err) {
+    console.error('File Upload Error:', err);
+    res.status(500).json({ error: 'File upload failed' });
+  }
+};
+
 // POST /api/jobs/:id/apply - Freelancer applies to a job
-export const applyForJob = async (req, res) => {
+/* export const applyForJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) {
@@ -152,13 +242,14 @@ export const applyForJob = async (req, res) => {
     res.status(500).json({ error: 'Error applying for job.' });
   }
 };
-
+ */
 // GET /api/client/jobs - Get jobs created by the logged-in client
 export const getJobsByClient = async (req, res) => {
   try {
     const jobs = await Job.find({ client: req.user._id })
       .sort({ createdAt: -1 })
-      .populate('freelancers', 'name email');
+      .populate('freelancers', 'name email')
+      .populate('assignedFreelancer', 'name email'); // ✅ Add this line
 
     res.status(200).json(jobs);
   } catch (err) {
@@ -166,4 +257,5 @@ export const getJobsByClient = async (req, res) => {
     res.status(500).json({ error: 'Error fetching client jobs.' });
   }
 };
+
 

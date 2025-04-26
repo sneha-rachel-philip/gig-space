@@ -22,28 +22,58 @@ const jobSchema = new mongoose.Schema(
     ],
     category: {
       type: String,
-      enum: ['Design', 'Development', 'Writing', 'Marketing'], // etc.
+      enum: ['Design', 'Development', 'Writing', 'Marketing'], // add more as needed
     },
-    
+    acceptedTill: {
+      type: Date,
+    },
+    completedBy: {
+      type: Date,
+    },
+    milestones: [
+      {
+        type: String,
+      },
+    ],
     client: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',  // Link to the user who created the job
+      ref: 'User',
       required: true,
     },
     freelancers: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',  
+        ref: 'User',
       },
     ],
+    assignedFreelancer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',  
+      default: null, 
+    },
     status: {
       type: String,
-      enum: ['open', 'closed'],
+      enum: ['open', 'inprogress', 'closed'],
       default: 'open',
     },
-  },
+  
+  files: [
+    {
+      filename: String,
+      originalname: String,
+      uploader: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+},
   {
-    timestamps: true,  
+    timestamps: true,
   }
 );
 

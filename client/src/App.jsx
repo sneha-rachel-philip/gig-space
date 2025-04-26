@@ -23,10 +23,14 @@ import JobDetails from './pages/Jobs/JobDetails';
 import JobList from './pages/Jobs/JobList';
 import PostJob from './pages/Jobs/PostJob';
 import EditJob from './pages/Jobs/EditJob';
+import JobCategory from './pages/Jobs/JobCategory';
+import JobArea from './pages/Jobs/JobArea';
+
 
 // Freelancer Dashboard
+import FreelancerDashboardLayout from './pages/FreelancerDashboard/FreelancerDashboardLayout';
 import FreelancerHome from './pages/FreelancerDashboard/FreelancerHome';
-
+import FreelancerJobs from './pages/FreelancerDashboard/FreelancerJobs';
 
 function App() {
   return (
@@ -41,9 +45,19 @@ function App() {
           {/* Placeholder user dashboard (generic) */}
           <Route path="/userdashboard" element={<UserDashboard />} />
 
-           {/* Common Routes */}
-           <Route path="/jobs" element={<JobList />} />
+           {/* Job Routes */}
+          <Route path="/jobs/categories" element={<JobCategory />} />
+          <Route path="/jobs/categories/list" element={<JobList />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route
+            path="/job-area/:jobId"
+            element={
+              <PrivateRoute allowedRoles={['client', 'freelancer']}>
+                <JobArea />
+              </PrivateRoute>
+            }
+          />
+ 
 
 
           {/* Client Dashboard (Protected if needed later) */}
@@ -71,7 +85,7 @@ function App() {
             path="/freelancer"
             element={
               <PrivateRoute allowedRoles={['freelancer']}>
-                <ClientDashboardLayout />
+                <FreelancerDashboardLayout />
               </PrivateRoute>
             }
           >
@@ -80,7 +94,9 @@ function App() {
             <Route path="payments" element={<FreelancerPayments />} />
             <Route path="messages" element={<FreelancerMessages />} />
             <Route path="jobs" element={<ClientJobs />} />
-            <Route path="jobs/:id" element={<JobDetails />} /> */}
+            <Route path="jobs/:id" element={<JobDetails />} /> */
+            <Route path="jobs" element={<FreelancerJobs />} />
+}
           </Route>    
 
         </Routes>

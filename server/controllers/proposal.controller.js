@@ -71,6 +71,63 @@ export const getProposalsForJob = async (req, res) => {
   }
 };
 
+export const acceptProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+
+    // Find the proposal
+    const proposal = await Proposal.findById(proposalId).populate('job freelancer');
+    if (!proposal) return res.status(404).json({ message: 'Proposal not found' });
+
+    // Update proposal status to accepted
+    proposal.status = 'accepted';
+    await proposal.save();
+
+    // Update the job status to in-progress and assign freelancer
+    const job = proposal.job;
+    job.status = 'inprogress'; // Change the job status to 'inprogress' or any appropriate status
+    job.assignedFreelancer = proposal.freelancer._id;
+    await job.save();
+
+    // Optionally, reject all other proposals for this job (if needed)
+    await Proposal.updateMany(
+      { job: job._id, _id: { $ne: proposalId }, status: 'pending' },
+      { status: 'rejected' }
+    );
+
+    res.status(200).json({ message: 'Proposal accepted', proposal, job });
+  } catch (err) {
+    res.status(500).json({ message: 'Error accepting proposal', error: err.message });
+  }
+};
+
+export const rejectProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+
+    // Find the proposal
+    const proposal = await Proposal.findById(proposalId).populate('job freelancer');
+    if (!proposal) return res.status(404).json({ message: 'Proposal not found' });
+
+    // Update proposal status to rejected
+    proposal.status = 'rejected';
+    await proposal.save();
+
+    // Optionally, update the job status if necessary
+    const job = proposal.job;
+    // If the job has no assigned freelancer, you can change its status to 'open'
+    if (!job.assignedFreelancer) {
+      job.status = 'open';  // Set job status back to 'open' if needed
+      await job.save();
+    }
+
+    res.status(200).json({ message: 'Proposal rejected', proposal, job });
+  } catch (err) {
+    res.status(500).json({ message: 'Error rejecting proposal', error: err.message });
+  }
+};
+
+
 // Update the status of a proposal (client can accept/reject)
 /* export const updateProposalStatus = async (req, res) => {
   try {
@@ -101,7 +158,7 @@ export const getProposalsForJob = async (req, res) => {
   }
 };
  */
-// Accept Proposal
+/* // Accept Proposal
 export const acceptProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
@@ -133,4 +190,4 @@ export const rejectProposal = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Error rejecting proposal', error: err.message });
   }
-};
+}; */
