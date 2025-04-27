@@ -4,7 +4,8 @@ import {getJobs} from '../../services/apiRoutes';
 import { useLocation } from 'react-router-dom';
 import '../../styles/JobList.css'; // Assuming you have a CSS file for styling
 import { Link } from 'react-router-dom';
-
+import Layout from '../../components/Layout'; // Assuming you have a Layout component for consistent styling
+import { Card, Button, Container, Row, Col, Form } from "react-bootstrap";
 
 const JobList = () => {
   const location = useLocation();
@@ -80,64 +81,115 @@ const JobList = () => {
   };
 
   return (
-    <div className="joblist-container">
-      <h2>{selectedCategory} Jobs</h2>
+    <Layout>
 
-      {/* Search Bar */}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search by title or description"
-          value={search}
-          onChange={handleSearchChange}
-        />
-      </div>
 
-      {/* Budget Filter */}
-      <div className="budget-filter">
-        <label>
-          Min Budget:
-          <input
-            type="number"
-            name="minBudget"
-            value={budgetRange[0]}
-            onChange={handleBudgetChange}
-          />
-        </label>
-        <label>
-          Max Budget:
-          <input
-            type="number"
-            name="maxBudget"
-            value={budgetRange[1]}
-            onChange={handleBudgetChange}
-          />
-        </label>
-      </div>
+<Container className="py-5">
+        <div className="text-center mb-5">
+          <h2 className="fw-bold">{selectedCategory} Jobs</h2>
+          <p className="text-muted">Find your perfect freelance opportunity</p>
+        </div>
 
-      <div className="job-cards">
-        {jobs.length > 0 ? (
-          jobs.map((job) => (
-            <div className="job-card hover:shadow-md transition-shadow p-4 rounded bg-white">
-              <Link to={`/jobs/${job._id}`} className="block text-decoration-none">
-                <h3 className="text-lg font-semibold">{job.title}</h3>
-                </Link>
-              <p>{job.description}</p>
-              <p><strong>Budget:</strong> ₹{job.budget}</p>
-              <p><strong>Skills:</strong> {job.skillsRequired.join(', ')}</p>
+        {/* Search Bar */}
+        <Row className="justify-content-center mb-4">
+          <Col md={8}>
+            <Form>
+              <Form.Control
+                type="text"
+                placeholder="Search by title or description..."
+                value={search}
+                onChange={handleSearchChange}
+                className="shadow-sm"
+              />
+            </Form>
+          </Col>
+        </Row>
+
+        {/* Budget Filter */}
+        <Row className="g-3 justify-content-center mb-5">
+          <Col xs={6} md={3}>
+            <Form.Group controlId="minBudget">
+              <Form.Label>Min Budget</Form.Label>
+              <Form.Control
+                type="number"
+                name="minBudget"
+                value={budgetRange[0]}
+                onChange={handleBudgetChange}
+                placeholder="₹ Min"
+              />
+            </Form.Group>
+          </Col>
+          <Col xs={6} md={3}>
+            <Form.Group controlId="maxBudget">
+              <Form.Label>Max Budget</Form.Label>
+              <Form.Control
+                type="number"
+                name="maxBudget"
+                value={budgetRange[1]}
+                onChange={handleBudgetChange}
+                placeholder="₹ Max"
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Job Cards */}
+        <Row className="g-4">
+          {jobs.length > 0 ? (
+            jobs.map((job) => (
+              <Col key={job._id} md={6} lg={4}>
+                <Card className="h-100 shadow-sm border-0">
+                  <Card.Body className="d-flex flex-column">
+                    <Card.Title className="mb-2">
+                      <Link to={`/jobs/${job._id}`} className="text-decoration-none text-dark fw-bold">
+                        {job.title}
+                      </Link>
+                    </Card.Title>
+                    <Card.Text className="text-muted small flex-grow-1">
+                      {job.description.length > 100
+                        ? `${job.description.slice(0, 100)}...`
+                        : job.description}
+                    </Card.Text>
+                    <div className="mt-3">
+                      <Card.Text className="mb-1">
+                        <strong>Budget:</strong> ₹{job.budget}
+                      </Card.Text>
+                      <Card.Text className="mb-0">
+                        <strong>Skills:</strong> {job.skillsRequired.join(", ")}
+                      </Card.Text>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))
+          ) : (
+            <div className="text-center py-5">
+              <p className="text-muted">No jobs found.</p>
             </div>
-          ))
-        ) : (
-          <p>No jobs found.</p>
-        )}
-      </div>
+          )}
+        </Row>
 
-      {/* Pagination Controls */}
-      <div>
-        <button onClick={handlePreviousPage} disabled={page === 1}>Previous</button>
-        <button onClick={handleNextPage} disabled={page === totalPages}>Next</button>
-      </div>
-    </div>
+        {/* Pagination Controls */}
+        <div className="d-flex justify-content-center gap-3 mt-5">
+          <Button
+            variant="primary"
+            onClick={handlePreviousPage}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleNextPage}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </Container>
+  
+   </Layout>
+
   );
 };
 

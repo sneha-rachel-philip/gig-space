@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PrivateRoute from './components/PrivateRoute';
 
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import UserDashboard from './pages/UserDashboard'; // placeholder
@@ -39,15 +40,16 @@ function App() {
         <ToastContainer />
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
           {/* Placeholder user dashboard (generic) */}
           <Route path="/userdashboard" element={<UserDashboard />} />
 
            {/* Job Routes */}
-          <Route path="/jobs/categories" element={<JobCategory />} />
-          <Route path="/jobs/categories/list" element={<JobList />} />
+          <Route path="/jobs/" element={<JobCategory />} />
+          <Route path="/jobs/categories/" element={<JobList />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route
             path="/job-area/:jobId"

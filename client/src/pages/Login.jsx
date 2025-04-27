@@ -4,6 +4,8 @@ import { toast } from 'react-toastify'; // for toast notifications
 import { loginUser } from '../services/apiRoutes';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import Layout from '../components/Layout';
+
 import '../styles/Login.css';
 
 
@@ -64,6 +66,8 @@ function Login() {
   };
 
   return (
+    <Layout>
+
     <div className="login-container">
       <div className="login-card">
         <h2>Login</h2>
@@ -98,6 +102,7 @@ function Login() {
         </p>
       </div>
     </div>
+    </Layout>
   );
   
 }

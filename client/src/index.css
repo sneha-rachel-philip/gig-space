@@ -1,13 +1,21 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body {
-  font-family: sans-serif;
-  margin: 0;
-  background-color: #f9fafb;
-}
-
-input, button {
-  font-size: 1rem;
-}
+.nav-item {
+    margin-left: 1.5rem; /* around 24px */
+  }
+  
+.nav-link {
+    position: relative;
+    transition: color 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    color: #913d58; /* soft light blue on hover */
+  }
+  
+  .active-link {
+    font-weight: bold;
+    border-bottom: 2px solid rgba(121, 167, 205, 0.416);
+  }
+  .logo-hover:hover {
+    transform: scale(1.15); /* Zoom slightly on hover */
+  }
+    
