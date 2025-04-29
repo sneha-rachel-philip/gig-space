@@ -15,6 +15,9 @@ export const updateJobStatus = (jobId, data) =>axiosInstance.put(`/client/jobs/$
 export const updateJob = (jobId, updatedData) => axiosInstance.put(`/client/jobs/${jobId}`, updatedData);
 
 
+// Freelancer routes
+export const getJobsByFreelancer = () => axiosInstance.get('/freelancer/jobs');
+
 // Job routes
 //export const getJobs = () => axiosInstance.get('/jobs');
 // apiRoutes.js
@@ -49,6 +52,7 @@ export const submitProposal = (data) => axiosInstance.post('/proposal/submit', d
 export const getProposalsForJob = (jobId) => axiosInstance.get(`/proposal/${jobId}`);
 export const acceptProposal = (proposalId) => axiosInstance.put(`/proposal/${proposalId}/accept`);
 export const rejectProposal = (proposalId) => axiosInstance.put(`/proposal/${proposalId}/reject`);
+export const getProposalsForFreelancer = () => axiosInstance.get('/proposal/freelancer');
 
 // Review routes
 export const addReview = (data) => axiosInstance.post('/reviews', data);
@@ -59,3 +63,5 @@ export const getCurrentUser = () => axiosInstance.get('/users/me');
 export const getUserById = (userId) => axiosInstance.get(`/users/${userId}`);
 export const updateUser = (data) => axiosInstance.put('/users/me', data);
 export const getUsersByRole = (role) => axiosInstance.get(`/users/role/${role}`);
+export const changePassword = (data) =>axiosInstance.put('/users/changePassword', data);
+  

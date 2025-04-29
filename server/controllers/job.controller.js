@@ -258,4 +258,18 @@ export const getJobsByClient = async (req, res) => {
   }
 };
 
+export const getJobsByFreelancer = async (req, res) => {
+  try {
+    const jobs = await Job.find({ assignedFreelancer: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate('client', 'name email')
+      .populate('assignedFreelancer', 'name email'); // ✅ Add this line
+
+    res.status(200).json(jobs);
+  } catch (err) {
+    console.error('Error fetching freelancer jobs:', err);
+    res.status(500).json({ error: 'Error fetching freelancer jobs.' });
+  }
+}
+
 

@@ -7,6 +7,7 @@ import {
   getProposalsForJob,
   acceptProposal,
   rejectProposal,
+  getProposalsForFreelancer,
 } from '../controllers/proposal.controller.js';
 
 const router = express.Router();
@@ -23,5 +24,8 @@ router.put('/:proposalId/accept', authenticate, authorizeRoles('client'), accept
 
 // Reject a proposal
 router.put('/:proposalId/reject', authenticate, authorizeRoles('client'), rejectProposal);
+
+// Get all proposals for a freelancer (only freelancers can view their own proposals)
+router.get('/freelancer', authenticate, authorizeRoles('freelancer'), getProposalsForFreelancer);
 
 export default router;

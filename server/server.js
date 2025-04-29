@@ -16,6 +16,7 @@ import messageRoutes from './routes/message.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import clientRoutes from './routes/client.routes.js'; 
+import freelancerRoutes from './routes/freelancer.routes.js'; // Import freelancer routes
 
 
 
@@ -41,6 +42,7 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/freelancer', freelancerRoutes); // Add this line to include freelancer routes
 
 
 // Health check route

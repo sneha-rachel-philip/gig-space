@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import WelcomeBanner from '../../components/WelcomeBanner';
 import StatsOverview from '../../components/StatsOverview';
 import ProjectTable from '../../components/ProjectTable';
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/ClientHome.css';
 
 

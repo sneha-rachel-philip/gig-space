@@ -1,10 +1,6 @@
-/* import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getJobsByClient, updateJobStatus,getProposalsForJob, acceptProposal, rejectProposal} from '../../services/apiRoutes';
-//import { Link } from 'react-router-dom';
-import '../../styles/ClientJobs.css'; */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   getJobsByClient,
   updateJobStatus,
@@ -13,8 +9,18 @@ import {
   rejectProposal,
 } from '../../services/apiRoutes';
 
-import '../../styles/ClientJobs.css';
-import { Link } from 'react-router-dom';
+import { 
+  Container, 
+  Row, 
+  Col, 
+  Button, 
+  Accordion, 
+  Card, 
+  Badge, 
+  Pagination,
+  Table
+} from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -41,6 +47,7 @@ const ClientJobs = () => {
       const currentProposals = [];
       const ongoingJobs = [];
       const finishedJobs = [];
+      
       for (const job of allJobs) {
         const proposalRes = await getProposalsForJob(job._id);
         const jobProposals = proposalRes.data;
@@ -79,7 +86,6 @@ const ClientJobs = () => {
             jobId: job._id,
             startDate: job.createdAt,
             endDate: job.completedBy || 'TBD',
-            
           });
         } else if (job.status === 'closed') {
           finishedJobs.push({
@@ -90,7 +96,6 @@ const ClientJobs = () => {
           });
         }
       }
-      
 
       setProposals(currentProposals);
       setCurrentJobs(ongoingJobs);
@@ -119,137 +124,186 @@ const ClientJobs = () => {
   };
 
   const paginate = (data, page) => data.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
- return(
-  <div className="client-jobs-container">
-  <button onClick={() => navigate('/client/post-job')}>
-    + Post New Job
-  </button>
-
-  <h2>Current Proposals</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Job Title</th>
-        <th>Date Created</th>
-        <th>Status</th>
-        <th>Freelancer</th>
-        <th>Bid Amount</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {paginate(proposals, proposalPage).map((item, idx) => (
-        <tr key={idx}>
-          <td>{item.title}</td>
-          <td>{new Date(item.createdAt).toLocaleDateString()}</td>
-          <td>{item.status}</td>
-          <td>{item.freelancerName}</td>
-          <td>${item.amount}</td>
-          <td>
-            {item.status !== 'accepted' && item.status !== 'rejected' && item.proposalId && (
-              <>
-                <button onClick={() => handleProposal(item.jobId, item.freelancerId, item.proposalId, 'accept')}>
-                  Accept
-                </button>
-                <button onClick={() => handleProposal(item.jobId, item.freelancerId, item.proposalId, 'reject')}>
-                  Reject
-                </button>
-              </>
-            )}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-
-  <div className="pagination">
-    <button onClick={() => setProposalPage((p) => Math.max(0, p - 1))} disabled={proposalPage === 0}>
-      Prev
-    </button>
-    <button
-      onClick={() =>
-        setProposalPage((p) => (p + 1) * ITEMS_PER_PAGE < proposals.length ? p + 1 : p)
-      }
-      disabled={(proposalPage + 1) * ITEMS_PER_PAGE >= proposals.length}
-    >
-      Next
-    </button>
-  </div>
-
-  <h2>Current Jobs</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Job Title</th>
-        <th>Start Date</th>
-        <th>End Date</th>
+  
+  const renderPagination = (items, currentPage, setPage) => {
+    const pages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    
+    if (pages <= 1) return null;
+    
+    return (
+      <Pagination className="mt-3 justify-content-center">
+        <Pagination.Prev 
+          onClick={() => setPage(p => Math.max(0, p - 1))}
+          disabled={currentPage === 0} 
+        />
         
-      </tr>
-    </thead>
-    <tbody>
-      {paginate(currentJobs, currentPage).map((item, idx) => (
-        <tr key={idx}>
-          
-          <td><Link to={`/job-area/${item.jobId}`}>{item.title}</Link></td>
-          <td>{new Date(item.startDate).toLocaleDateString()}</td>
-          <td>{item.endDate !== 'TBD' ? new Date(item.endDate).toLocaleDateString() : 'TBD'}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+        {[...Array(pages)].map((_, idx) => (
+          <Pagination.Item 
+            key={idx} 
+            active={idx === currentPage}
+            onClick={() => setPage(idx)}
+          >
+            {idx + 1}
+          </Pagination.Item>
+        ))}
+        
+        <Pagination.Next 
+          onClick={() => setPage(p => (p + 1 < pages ? p + 1 : p))}
+          disabled={currentPage + 1 >= pages} 
+        />
+      </Pagination>
+    );
+  };
+  
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'accepted':
+        return <Badge bg="success">Accepted</Badge>;
+      case 'rejected':
+        return <Badge bg="danger">Rejected</Badge>;
+      case 'No proposals yet':
+        return <Badge bg="secondary">No proposals</Badge>;
+      default:
+        return <Badge bg="info">Pending</Badge>;
+    }
+  };
 
-  <div className="pagination">
-    <button onClick={() => setCurrentPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0}>
-      Prev
-    </button>
-    <button
-      onClick={() =>
-        setCurrentPage((p) => (p + 1) * ITEMS_PER_PAGE < currentJobs.length ? p + 1 : p)
-      }
-      disabled={(currentPage + 1) * ITEMS_PER_PAGE >= currentJobs.length}
-    >
-      Next
-    </button>
-  </div>
+  return (
+    <Container className="my-5">
+      <Row className="mb-4">
+        <Col className="d-flex justify-content-between align-items-center">
+          <h1>Jobs Dashboard</h1>
+          <Button 
+            variant="primary" 
+            size="lg"
+            onClick={() => navigate('/client/post-job')}
+          >
+            + Post New Job
+          </Button>
+        </Col>
+      </Row>
 
-  <h2>Completed Jobs</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Job Title</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      {paginate(completedJobs, completedPage).map((item, idx) => (
-        <tr key={idx}>
-          <td>{item.title}</td>
-          <td>{new Date(item.startDate).toLocaleDateString()}</td>
-          <td>{item.endDate !== 'TBD' ? new Date(item.endDate).toLocaleDateString() : 'TBD'}</td>
-          <td>${item.amount}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+      <Accordion defaultActiveKey="0" className="mb-5">
+        <Accordion.Item eventKey="0">
+          <Accordion.Header>
+            <h3 className="mb-0">Current Proposals</h3>
+          </Accordion.Header>
+          <Accordion.Body>
+            <Table responsive hover>
+              <thead>
+                <tr>
+                  <th>Job Title</th>
+                  <th>Date Created</th>
+                  <th>Status</th>
+                  <th>Freelancer</th>
+                  <th>Bid Amount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginate(proposals, proposalPage).map((item, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <Link to={`/jobs/${item.jobId}`}>{item.title}</Link>
+                    </td>
+                    <td>{new Date(item.createdAt).toLocaleDateString()}</td>
+                    <td>{getStatusBadge(item.status)}</td>
+                    <td>{item.freelancerName}</td>
+                    <td>{item.amount !== '—' ? `$${item.amount}` : '—'}</td>
+                    <td>
+                      {item.status !== 'accepted' && item.status !== 'rejected' && item.proposalId && (
+                        <div className="d-flex gap-2">
+                          <Button 
+                            variant="success" 
+                            size="sm"
+                            onClick={() => handleProposal(item.jobId, item.freelancerId, item.proposalId, 'accept')}
+                          >
+                            Accept
+                          </Button>
+                          <Button 
+                            variant="danger" 
+                            size="sm"
+                            onClick={() => handleProposal(item.jobId, item.freelancerId, item.proposalId, 'reject')}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {proposals.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="text-center py-3">No proposals available</td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
+            {renderPagination(proposals, proposalPage, setProposalPage)}
+          </Accordion.Body>
+        </Accordion.Item>
 
-  <div className="pagination">
-    <button onClick={() => setCompletedPage((p) => Math.max(0, p - 1))} disabled={completedPage === 0}>
-      Prev
-    </button>
-    <button
-      onClick={() =>
-        setCompletedPage((p) => (p + 1) * ITEMS_PER_PAGE < completedJobs.length ? p + 1 : p)
-      }
-      disabled={(completedPage + 1) * ITEMS_PER_PAGE >= completedJobs.length}
-    >
-      Next
-    </button>
-  </div>
-</div>
+        <Accordion.Item eventKey="1">
+          <Accordion.Header>
+            <h3 className="mb-0">Current Jobs</h3>
+          </Accordion.Header>
+          <Accordion.Body>
+            <Row>
+              {paginate(currentJobs, currentPage).map((job, idx) => (
+                <Col key={idx} md={6} className="mb-3">
+                  <Card>
+                    <Card.Body>
+                      <Card.Title>
+                        <Link to={`/job-area/${job.jobId}`}>{job.title}</Link>
+                      </Card.Title>
+                      <Card.Text>
+                        <strong>Start Date:</strong> {new Date(job.startDate).toLocaleDateString()}<br />
+                        <strong>Expected Completion:</strong> {job.endDate !== 'TBD' ? new Date(job.endDate).toLocaleDateString() : 'TBD'}
+                      </Card.Text>
+                      <Badge bg="primary">In Progress</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+              {currentJobs.length === 0 && (
+                <Col className="text-center py-3">No current jobs available</Col>
+              )}
+            </Row>
+            {renderPagination(currentJobs, currentPage, setCurrentPage)}
+          </Accordion.Body>
+        </Accordion.Item>
 
- );
+        <Accordion.Item eventKey="2">
+          <Accordion.Header>
+            <h3 className="mb-0">Completed Jobs</h3>
+          </Accordion.Header>
+          <Accordion.Body>
+            <Row>
+              {paginate(completedJobs, completedPage).map((job, idx) => (
+                <Col key={idx} md={6} className="mb-3">
+                  <Card>
+                    <Card.Body>
+                      <Card.Title>{job.title}</Card.Title>
+                      <Card.Text>
+                        <strong>Started:</strong> {new Date(job.startDate).toLocaleDateString()}<br />
+                        <strong>Completed:</strong> {job.endDate !== 'TBD' ? new Date(job.endDate).toLocaleDateString() : 'TBD'}<br />
+                        <strong>Amount:</strong> ${job.amount}
+                      </Card.Text>
+                      <Badge bg="success">Completed</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+              {completedJobs.length === 0 && (
+                <Col className="text-center py-3">No completed jobs available</Col>
+              )}
+            </Row>
+            {renderPagination(completedJobs, completedPage, setCompletedPage)}
+          </Accordion.Body>
+        </Accordion.Item>
+      </Accordion>
+    </Container>
+  );
 };
 
 export default ClientJobs;

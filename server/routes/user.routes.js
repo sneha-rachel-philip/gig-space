@@ -8,6 +8,9 @@ import {
 
 import { authenticate } from '../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../middlewares/roleMiddleware.js';
+import { uploadProfileImage } from '../controllers/user.controller.js';
+import uploadImage from '../middlewares/uploadImage.js';
+import { changePassword } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
@@ -25,5 +28,11 @@ router.put('/me', authenticate, updateUser);
 
 // Protected: Only 'client' can view freelancers, or vice versa
 router.get('/role/:role', authenticate, authorizeRoles('client', 'freelancer'), getUsersByRole);
+
+router.post('/upload', authenticate, uploadImage.single('profileImage'), uploadProfileImage);
+
+
+router.put('/changePassword', authenticate, changePassword);
+
 
 export default router;

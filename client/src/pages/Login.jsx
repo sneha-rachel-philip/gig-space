@@ -1,109 +1,116 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // for navigation
-import { toast } from 'react-toastify'; // for toast notifications
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { loginUser } from '../services/apiRoutes';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 
-import '../styles/Login.css';
-
+// Import React Bootstrap components
+import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Hook for navigation
-  const { setUser } = useAuth();
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      setLoading(true); // Optional: Set loading state if needed
-      // Make API call to login
+      setLoading(true);
       const res = await loginUser({
         email,
         password,
       });
-      //console.log(res.data);
+      
       const { token, ...user } = res.data;
-      //console.log('User data:', user); // Debugging line
-      // Save token to localStorage (or Context later)
       localStorage.setItem('token', token);
-
-       // Show success toast
-       toast.success('Login successful!');
-
-      // Optionally, you can set user data in context or state management
-      setUser(user)
-
+      toast.success('Login successful!');
+      login(user);
 
       console.log('Login successful:', user);
-       // Redirect to dashboard
-       //navigate('/dashboard');
-       if (user.role === 'admin') {
-        navigate('/admin/home'); // Redirect to admin home page 
-      } else if (user.role === 'freelancer') {
-        navigate('/freelancer/home'); // Redirect to freelancer home page
-      } else if (user.role === 'client') {    
-       navigate('/client/home'); // Redirect to client home page
+      
+      if (user && user.role === 'admin') {
+        navigate('/admin/home');
+      } else if (user && user.role === 'freelancer') {
+        navigate('/freelancer/home');
+      } else if (user && user.role === 'client') {
+        navigate('/client/home');
+      } else {
+        navigate('/userdashboard');
+        console.log("Defaulting to dashboard, current user:", user);
       }
-      else {
-        navigate('/userdashboard'); // Redirect to user dashboard (generic)
-      }
-
     } catch (error) {
       console.error('Login error:', error);
-      setError('Login failed. Please check your credentials.'); // Set error state
+      setError('Login failed. Please check your credentials.');
       toast.error('Login failed. Please check your credentials.');
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
 
   return (
     <Layout>
-
-    <div className="login-container">
-      <div className="login-card">
-        <h2>Login</h2>
-        <form onSubmit={handleLogin}>
-          <div>
-            <label>Email:</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Password:</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {error && <p className="error-message">{error}</p>}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-  
-        <p>
-          Forgot your password? <a href="#">Reset here</a><br />
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
-      </div>
-    </div>
+      <Container className="py-5">
+        <div className="d-flex justify-content-center">
+          <Card className="shadow" style={{ maxWidth: '450px', width: '100%' }}>
+            <Card.Body className="p-4">
+              <Card.Title className="text-center mb-4">
+                <h2>Login</h2>
+              </Card.Title>
+              
+              {error && <Alert variant="danger">{error}</Alert>}
+              
+              <Form onSubmit={handleLogin}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+                
+                <Button 
+                  variant="primary" 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-100 mt-3"
+                >
+                  {loading ? 'Logging in...' : 'Login'}
+                </Button>
+              </Form>
+              
+              <div className="text-center mt-4">
+                <p className="mb-1">
+                  Forgot your password? <a href="#">Reset here</a>
+                </p>
+                <p>
+                  Don't have an account? <Link to="/signup">Sign up</Link>
+                </p>
+              </div>
+            </Card.Body>
+          </Card>
+        </div>
+      </Container>
     </Layout>
   );
-  
 }
+
 export default Login;

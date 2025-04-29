@@ -18,13 +18,14 @@ const router = express.Router();
 
 
 // GET /api/jobs - Get all jobs
-router.get('/', authenticate, getJobs);
+router.get('/', getJobs);
 
 router.get('/category', getJobsByCategory);
 
 
 // GET /api/jobs/:id - Get job details by ID
-router.get('/:id', authenticate, getJobById);
+router.get('/:id', getJobById);
+
 
 
 router.post('/:id/upload', authenticate, upload.single('file'), uploadJobFile);

@@ -8,8 +8,11 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import UserDashboard from './pages/UserDashboard'; // placeholder
+import Navbar from './components/Navbar';
+import ProfilePage from './pages/ProfilePage';
 
 import { AuthProvider } from './context/AuthContext';
+
 
 // Client Dashboard
 import ClientDashboardLayout from './pages/ClientDashboard/ClientDashboardLayout';
@@ -38,6 +41,7 @@ function App() {
     <AuthProvider>
       <Router>
         <ToastContainer />
+        <Navbar />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -60,7 +64,14 @@ function App() {
             }
           />
  
-
+            <Route
+             path="user/profile"
+             element={
+              <PrivateRoute allowedRoles={['client', 'freelancer', 'admin']}>
+                <ProfilePage />
+              </PrivateRoute>
+            }
+          />
 
           {/* Client Dashboard (Protected if needed later) */}
           <Route
@@ -79,6 +90,7 @@ function App() {
             <Route path="jobs/:id" element={<JobDetails />} />
             <Route path="post-job" element={<PostJob />} />
             <Route path="edit-job/:id" element={<EditJob />} />
+            <Route path="profile" element={<ProfilePage />} />
 
           </Route>
 
@@ -97,7 +109,7 @@ function App() {
             <Route path="messages" element={<FreelancerMessages />} />
             <Route path="jobs" element={<ClientJobs />} />
             <Route path="jobs/:id" element={<JobDetails />} /> */
-            <Route path="jobs" element={<FreelancerJobs />} />
+            <Route path="jobs" element={<FreelancerHome />} />
 }
           </Route>    
 

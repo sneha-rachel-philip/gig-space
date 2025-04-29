@@ -127,6 +127,21 @@ export const rejectProposal = async (req, res) => {
   }
 };
 
+export const getProposalsForFreelancer = async (req, res) => {
+  try {
+    const freelancerId = req.user._id; // Get the freelancer's ID from the authenticated user
+
+    // Find all proposals submitted by the freelancer
+    const proposals = await Proposal.find({ freelancer: freelancerId })
+      .populate('job', 'title description') // Populate job details
+      .populate('freelancer', 'name email'); // Populate freelancer details
+
+    res.status(200).json(proposals);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching proposals' });
+  }
+}
+
 
 // Update the status of a proposal (client can accept/reject)
 /* export const updateProposalStatus = async (req, res) => {

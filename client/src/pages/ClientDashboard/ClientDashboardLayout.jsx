@@ -1,14 +1,18 @@
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
 import { Outlet } from 'react-router-dom';
-import '../../styles/ClientDashboardLayout.css'; 
+import SidebarUser from '../../components/SidebarUser';
+
 const ClientDashboardLayout = () => {
+  const userRole = 'client'; 
+
   return (
-    <div className="dashboard-container">
-      <Sidebar role="client" className="sidebar" />
-      <main className="main-content">
+    <div className="d-flex">
+      <SidebarUser role={userRole} />
+      
+      <div id="content" className="p-4">
+        {/* Your main content */}
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 };

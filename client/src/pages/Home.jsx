@@ -16,7 +16,7 @@ const Home = () => {
             <p className="lead mt-3">
               We offer a closed space for short gigs. Get ready to roll!
             </p>
-            <Link to="/jobs/categories" className="btn btn-primary btn-lg mt-4">
+            <Link to="/jobs" className="btn btn-primary btn-lg mt-4">
               Browse Jobs
             </Link>
           </Col>

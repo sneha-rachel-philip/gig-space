@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getJobById, updateJob } from '../../services/apiRoutes';
 import { Container, Card, Form, Button, Row, Col, Spinner, Alert } from 'react-bootstrap';
-import Layout from '../../components/Layout';
+import LayoutUser from   '../../components/Layout';
 
 const EditJob = () => {
   const { id } = useParams();
@@ -109,7 +109,7 @@ const EditJob = () => {
   }
 
   return (
-    <Layout>
+    <LayoutUser>
     <Container className="py-5">
       <Row className="justify-content-center">
         <Col md={10} lg={8}>
@@ -268,7 +268,7 @@ const EditJob = () => {
         </Col>
       </Row>
     </Container>
-    </Layout>
+    </LayoutUser>
   );
 };
 

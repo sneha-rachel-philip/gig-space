@@ -112,3 +112,45 @@ export const paymentWebhook = async (req, res) => {
 
   res.status(200).json({ received: true });
 };
+
+export const createCheckoutSession = async (req, res) => {
+  try {
+    const { amount, milestoneLabel, contractId } = req.body;
+
+    const contract = await Contract.findById(contractId).populate('client freelancer');
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+    const payer = req.user._id.equals(contract.client._id) ? contract.client : contract.freelancer;
+    const receiver = payer.equals(contract.client._id) ? contract.freelancer : contract.client;
+
+    const session = await stripeClient.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `Milestone: ${milestoneLabel}`,
+          },
+          unit_amount: amount * 100, // cents
+        },
+        quantity: 1,
+      }],
+      customer_email: contract.client.email,
+      metadata: {
+        contractId,
+        milestoneLabel,
+        payerId: payer._id.toString(),
+        receiverId: receiver._id.toString(),
+      },
+      success_url: `${process.env.CLIENT_URL}/payment-success`,
+      cancel_url: `${process.env.CLIENT_URL}/job/${contract._id}`, // or wherever you'd like
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Could not initiate payment' });
+  }
+};
+

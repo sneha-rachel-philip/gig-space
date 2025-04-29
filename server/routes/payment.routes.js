@@ -1,7 +1,7 @@
 // routes/payment.routes.js
 import express from 'express';
 import { authenticate } from '../middlewares/authMiddleware.js';
-import { createPayment, getPaymentsForUser, paymentWebhook } from '../controllers/payment.controller.js';
+import { createPayment, getPaymentsForUser, paymentWebhook, createCheckoutSession } from '../controllers/payment.controller.js';
 
 const router = express.Router();
 
@@ -13,5 +13,8 @@ router.get('/', authenticate, getPaymentsForUser);
 
 // POST /api/payments/webhook - Stripe webhook for payment status updates
 router.post('/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
+
+router.post('/create-checkout-session', authenticate, createCheckoutSession);
+
 
 export default router;
