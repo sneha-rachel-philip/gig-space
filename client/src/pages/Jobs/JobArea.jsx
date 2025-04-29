@@ -67,7 +67,7 @@ const JobArea = () => {
   if (!job) return <div className="container mt-5 alert alert-danger">Job not found.</div>;
 
   const isClient = user.role === 'client';
-  const isFreelancer = user.role === 'freelancer';
+
 
   return (
     <div className="container py-4">
