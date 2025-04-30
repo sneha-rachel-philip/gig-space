@@ -8,15 +8,19 @@ import {
   acceptProposal,
   rejectProposal,
   getProposalsForFreelancer,
+  getProposalDetails,
 } from '../controllers/proposal.controller.js';
 
 const router = express.Router();
+
+// get proposal by ID
+router.get('/id/:id', getProposalDetails);
 
 // Submit a proposal for a job (only freelancers can do this)
 router.post('/submit', authenticate, authorizeRoles('freelancer'), submitProposal);
 
 // Get all proposals for a job (client or freelancer can view)
-router.get('/:jobId', authenticate, getProposalsForJob);
+router.get('/job/:jobId', authenticate, getProposalsForJob);
 
 // Client can update proposal status (accept/reject)
 // Accept a proposal

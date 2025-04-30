@@ -1,72 +1,129 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { getJobById } from '../../services/apiRoutes'; // adjust path as needed
+import { getJobById, createStripeCheckoutSession, getContractByJobId, updateContractStatus, markMilestoneAsDone } from '../../services/apiRoutes';
 import { useAuth } from '../../context/AuthContext';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure to import Bootstrap
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import FileUploadSection from '../../components/FileUploadSection';
 import JobChat from '../../components/JobChat';
+import { toast, ToastContainer } from 'react-toastify';
 
 const JobArea = () => {
   const { jobId } = useParams();
-  const { user } = useAuth(); // assume this gives user info
+  const { currentUser: user } = useAuth();
+
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+  const [contract, setContract] = useState(null);
+  const [contractStatus, setContractStatus] = useState(null);
+  const getPaidMilestoneLabels = contract?.milestonePayments.filter(m => m.paidAt).map(m => m.label) || [];
+
+
   const formatDate = (date) => {
     if (!date) return 'TBD';
     return new Date(date).toLocaleDateString();
   };
 
-  useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        const res = await getJobById(jobId);
-        setJob(res.data);
-      } catch (err) {
-        console.error('Error fetching job:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJob();
+  const fetchData = useCallback(async () => {
+    try {
+      const jobRes = await getJobById(jobId);
+      setJob(jobRes.data);
+  
+      const contractRes = await getContractByJobId(jobId);
+      setContract(contractRes.data);
+      setContractStatus(contractRes.data.status);
+    } catch (err) {
+      console.error('Error fetching job or contract:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [jobId]);
+  
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+  
 
-  const handleMilestonePayment = async (milestone, idx) => {
-    const amount = prompt(`Enter payment amount for "${milestone}"`);
-    if (!amount || isNaN(amount)) return;
+  const [selectedMilestone, setSelectedMilestone] = useState("");
+  const [completedMilestones, setCompletedMilestones] = useState([]);
+
+  const handleConfirmMarkDone = async () => {
+    if (!selectedMilestone) return;
   
     try {
-      const res = await fetch('/api/payments/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${yourAuthToken}`, // pull from context or state
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          milestoneLabel: milestone,
-          contractId: job.contractId, // or however you're storing it
-        }),
-      });
-  
-      const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url; // redirect to Stripe Checkout
-      } else {
-        alert(data.error || 'Payment failed.');
-      }
+      await markMilestoneAsDone(contract._id, selectedMilestone);
+      const updatedContract = await getContractByJobId(jobId);
+      setContract(updatedContract.data);
+      setCompletedMilestones(prev => [...prev, selectedMilestone]);
+
     } catch (err) {
-      console.error('Payment error', err);
-      alert('Something went wrong');
+      console.error("Error marking milestone as done:", err);
+      alert("Failed to mark milestone as done.");
     }
   };
   
+  
+
+  const handleAcceptContract = async () => {
+    try {
+      const response = await updateContractStatus(contract._id, 'active');
+      if (response.data?.message?.includes('Contract status updated')) {
+        setContractStatus('active');
+        toast.success('Contract accepted successfully!');
+      }
+    } catch (error) {
+      console.error('Error accepting contract:', error);
+      toast.error('Error accepting contract.');
+    }
+  };
+
+  const handleDeclineContract = async () => {
+    try {
+      const response = await updateContractStatus(contract._id, 'cancelled');
+      if (response.data?.message?.includes('Contract status updated')) {
+        setContractStatus('cancelled');
+        toast.error('Contract declined.');
+      }
+    } catch (error) {
+      console.error('Error declining contract:', error);
+      toast.error('Error declining contract.');
+    }
+  };
+
+  const handleMilestonePayment = async (milestone) => {
+    const amount = prompt(`Enter payment amount for "${milestone}"`);
+    if (!amount || isNaN(amount)) return;
+
+    try {
+      const res = await createStripeCheckoutSession({
+        amount: parseFloat(amount),
+        milestoneLabel: milestone,
+        contractId: contract?._id,
+      });
+
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      } else {
+        alert(res.data.error || 'Payment failed.');
+      }
+    } catch (err) {
+      console.error('Payment error', err);
+      alert('Something went wrong.');
+    }
+  };
+/*   console.log('Paid Milestone Labels:', getPaidMilestoneLabels);
+  console.log('Contract Object:', contract); */
+/*   console.log('Milestones:', job.milestones);
+console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
+
+
 
   if (loading) return <div className="container mt-5 text-center"><div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div></div>;
   if (!job) return <div className="container mt-5 alert alert-danger">Job not found.</div>;
 
-  const isClient = user.role === 'client';
+  const isClient = user?.role === 'client';
+  const isFreelancer = contract?.freelancer?._id === user?._id;
+  
 
 
   return (
@@ -89,81 +146,85 @@ const JobArea = () => {
         {/* Left Column */}
         <div className="col-md-8">
           {/* Contract Details */}
-          <div className="card shadow-sm mb-4">
-            <div className="card-header bg-light">
-              <h2 className="h4 mb-0"><i className="bi bi-file-earmark-text me-2"></i>Contract</h2>
+      <div className="card shadow-sm mb-4">
+        <div className="card-header bg-light">
+          <h2 className="h4 mb-0"><i className="bi bi-file-earmark-text me-2"></i>Contract</h2>
+        </div>
+        <div className="card-body">
+          <div className="row">
+            <div className="col-md-6 mb-3">
+              <p className="mb-1 fw-bold">Start Date:</p>
+              <p>{new Date(job.createdAt).toLocaleDateString()}</p>
             </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <p className="mb-1 fw-bold">Start Date:</p>
-                  <p>{new Date(job.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <p className="mb-1 fw-bold">Deadline:</p>
-                  <p>{job.completedBy ? new Date(job.completedBy).toLocaleDateString() : 'TBD'}</p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <p className="mb-1 fw-bold">Budget:</p>
-                  <p className="text-success fw-bold">${job.budget}</p>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <p className="mb-1 fw-bold">Required Skills:</p>
-                  <p>{job.skillsRequired.map(skill => (
-                    <span key={skill} className="badge bg-info text-dark me-1">{skill}</span>
-                  ))}</p>
-                </div>
-              </div>
+            <div className="col-md-6 mb-3">
+              <p className="mb-1 fw-bold">Deadline:</p>
+              <p>{formatDate(job?.completedBy)}</p>
+            </div>
+            <div className="col-md-6 mb-3">
+              <p className="mb-1 fw-bold">Budget:</p>
+              <p className="text-success fw-bold">${job.budget}</p>
+            </div>
+            <div className="col-md-6 mb-3">
+              <p className="mb-1 fw-bold">Required Skills:</p>
+              <p>{job.skillsRequired.map(skill => (
+                <span key={skill} className="badge bg-info text-dark me-1">{skill}</span>
+              ))}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contract Agreement */}
+      <div className="card shadow-sm mb-4">
+        <div className="card-header bg-light">
+          <h2 className="h4 mb-0"><i className="bi bi-clipboard-check me-2"></i>Contract Agreement</h2>
+        </div>
+        <div className="card-body">
+          <div className="row mb-3">
+            <div className="col-md-6">
+              <p className="mb-1 fw-bold">Client:</p>
+              <p>{job?.client?.name}</p>
+            </div>
+            <div className="col-md-6">
+              <p className="mb-1 fw-bold">Freelancer:</p>
+              <p>{job?.assignedFreelancer?.name}</p>
+            </div>
+            <div className="col-md-6">
+              <p className="mb-1 fw-bold">Project Title:</p>
+              <p>{job?.title}</p>
+            </div>
+            <div className="col-md-6">
+              <p className="mb-1 fw-bold">Budget:</p>
+              <p className="text-success fw-bold">${job?.budget}</p>
+            </div>
+            <div className="col-md-6">
+              <p className="mb-1 fw-bold">Deadline:</p>
+              <p>{formatDate(job?.completedBy)}</p>
             </div>
           </div>
 
-          {/* Contract Agreement */}
-          <div className="card shadow-sm mb-4">
-            <div className="card-header bg-light">
-              <h2 className="h4 mb-0"><i className="bi bi-clipboard-check me-2"></i>Contract Agreement</h2>
-            </div>
-            <div className="card-body">
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <p className="mb-1 fw-bold">Client:</p>
-                  <p>{job?.client?.name}</p>
-                </div>
-                <div className="col-md-6">
-                  <p className="mb-1 fw-bold">Freelancer:</p>
-                  <p>{job?.assignedFreelancer?.name}</p>
-                </div>
-                <div className="col-md-6">
-                  <p className="mb-1 fw-bold">Project Title:</p>
-                  <p>{job?.title}</p>
-                </div>
-                <div className="col-md-6">
-                  <p className="mb-1 fw-bold">Budget:</p>
-                  <p className="text-success fw-bold">${job?.budget}</p>
-                </div>
-                <div className="col-md-6">
-                  <p className="mb-1 fw-bold">Deadline:</p>
-                  <p>{formatDate(job?.completedBy)}</p>
-                </div>
-              </div>
+          <div className="contract-terms border-top pt-3 mt-2">
+            <h3 className="h5 mb-3">Terms & Conditions</h3>
+            <p className="text-justify" style={{ textAlign: 'justify', maxWidth: '800px', margin: '0 auto' }}>
+              This agreement outlines the scope of work between <strong>{job?.client?.name}</strong> and <strong>{job?.assignedFreelancer?.name}</strong> for 
+              the project titled <strong>{job?.title}</strong>. The freelancer agrees to deliver the required work by <strong>{formatDate(job?.completedBy)}</strong> in 
+              exchange for the agreed-upon budget of <strong>${job?.budget}</strong>.
+            </p>
+          </div>
 
-              <div className="contract-terms border-top pt-3 mt-2">
-                <h3 className="h5 mb-3">Terms & Conditions</h3>
-                <p>
-                  This agreement outlines the scope of work between <strong>{job?.client?.name}</strong> and <strong>{job?.assignedFreelancer?.name}</strong> 
-                  for the project titled <strong>{job?.title}</strong>. The freelancer agrees to deliver the required work by <strong>{formatDate(job?.completedBy)}</strong> 
-                  in exchange for the agreed-upon budget of <strong>${job?.budget}</strong>.
-                </p>
-              </div>
-
-              {/* Optional: Show accept/decline buttons for freelancer if needed */}
-              {user?.role === 'freelancer' && (
+          {/* Show accept/decline buttons only if the contract is not yet accepted or declined */}
+          <ToastContainer />
+              {user?.role === 'freelancer' && contractStatus !== 'active' && contractStatus !== 'cancelled' && (
                 <div className="d-flex gap-2 mt-3">
-                  <button className="btn btn-success">Accept Contract</button>
-                  <button className="btn btn-outline-danger">Decline</button>
+                  <button onClick={handleAcceptContract} className="btn btn-success">Accept Contract</button>
+                  <button onClick={handleDeclineContract} className="btn btn-outline-danger">Decline</button>
                 </div>
               )}
-            </div>
-          </div>
+              {contractStatus === 'active' && (
+                <button className="btn btn-success mt-3" disabled>Contract Accepted</button>
+              )}
+        </div>
+      </div>
 
           {/* Milestones & Payments */}
           <div className="card shadow-sm mb-4">
@@ -173,22 +234,49 @@ const JobArea = () => {
             <div className="card-body">
               {job.milestones.length > 0 ? (
                 <div className="list-group">
-                    {job.milestones.map((milestone, idx) => (
-                      <div key={idx} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <div>
-                          <span className="badge bg-primary rounded-pill me-2">{idx + 1}</span>
-                          {milestone}
+                    {job.milestones.map((milestone, idx) => {
+                      const isPaid = getPaidMilestoneLabels.includes(milestone);
+                      const contractMilestone = contract?.milestonePayments?.find(m => m.label === milestone);
+                      const isCompleted = contractMilestone?.completedByFreelancer;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                        >
+                          <div>
+                            <span className="badge bg-primary rounded-pill me-2">{idx + 1}</span>
+                            {milestone}
+                            {isPaid && <span className="badge bg-success ms-2">Paid</span>}
+                            {!isPaid && isCompleted && <span className="badge bg-warning text-dark ms-2">Marked as done</span>}
+                          </div>
+                    
+                          {isClient && !isPaid && (
+                            <button
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() => handleMilestonePayment(milestone, idx)}
+                            >
+                              Release Payment
+                            </button>
+                          )}
+                    
+                          {isFreelancer && !isPaid && (
+                            <button
+                              className="btn btn-sm btn-outline-warning ms-3"
+                              data-bs-toggle="modal"
+                              data-bs-target="#confirmMarkDoneModal"
+                              onClick={() => setSelectedMilestone(milestone)} 
+                              disabled={isCompleted || completedMilestones.includes(milestone)} 
+
+                            >
+                              Mark as Done
+                            </button>
+
+                          )}
                         </div>
-                        {isClient && (
-                          <button
-                            className="btn btn-sm btn-outline-success"
-                            onClick={() => handleMilestonePayment(milestone, idx)}
-                          >
-                            Release Payment
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
+
 
                 </div>
               ) : (
@@ -197,6 +285,50 @@ const JobArea = () => {
             </div>
           </div>
         </div>
+        <div
+          className="modal fade"
+          id="confirmMarkDoneModal"
+          tabIndex="-1"
+          aria-labelledby="confirmMarkDoneModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="confirmMarkDoneModalLabel">
+                  Confirm Milestone Completion
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                Are you sure you want to mark "<strong>{selectedMilestone}</strong>" as done?
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={handleConfirmMarkDone}
+                  data-bs-dismiss="modal"
+                >
+                  Yes, Mark as Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         {/* Right Column */}
         <div className="col-md-4">

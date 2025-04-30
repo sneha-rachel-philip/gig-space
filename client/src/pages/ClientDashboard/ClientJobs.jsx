@@ -7,6 +7,8 @@ import {
   getProposalsForJob,
   acceptProposal,
   rejectProposal,
+  getProposalById,
+  createContract,
 } from '../../services/apiRoutes';
 
 import { 
@@ -21,6 +23,7 @@ import {
   Table
 } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useAuth } from '../../context/AuthContext';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -105,23 +108,74 @@ const ClientJobs = () => {
     }
   };
 
-  const handleProposal = async (jobId, freelancerId, proposalId, action) => {
+  const getProposalDetails = async (proposalId) => {
     try {
-      // Update backend: job + proposal status
-      await updateJobStatus(jobId, { status: action, freelancerId });
+      const response = await getProposalById(proposalId);
+      return response.data;  // Return the proposal details
+    } catch (error) {
+      console.error('Error fetching proposal details:', error);
+    }
+  };
 
+  const handleProposal = async (proposalId, freelancerId, jobId, action) => {
+    try {
+      await updateJobStatus(jobId, { status: action, freelancerId });
+  
       if (action === 'accept') {
-        await acceptProposal(proposalId);
+        const acceptResponse = await acceptProposal(proposalId);
+  
+        if (acceptResponse.status === 200) {
+          console.log('Proposal accepted successfully');
+  
+          const proposalDetails = await getProposalDetails(proposalId);
+  
+          if (!proposalDetails) {
+            throw new Error("Proposal details not found");
+          }
+  
+          const { budget, title, deadline } = proposalDetails;
+  
+          await createContractFromProposal(jobId, freelancerId, proposalId, budget, title, deadline);
+        }
       } else if (action === 'reject') {
         await rejectProposal(proposalId);
       }
-
-      // Refresh UI
+  
       await fetchClientJobsAndProposals();
     } catch (err) {
       console.error('Error handling proposal:', err);
     }
   };
+  
+
+  const { currentUser } = useAuth();
+
+  const createContractFromProposal = async (jobId, freelancerId, proposalId, budget, title, deadline, milestones) => {
+    try {
+      if (!currentUser) {
+        console.error("User not authenticated.");
+        return;
+      }
+  
+      const contractData = {
+        jobId,
+        freelancerId,
+        terms: {
+          budget,
+          title,
+          deadline
+        },
+        milestones,
+      };
+  
+      await createContract(contractData); // uses the correct payload structure
+    } catch (err) {
+      console.error("Error creating contract from proposal:", err);
+    }
+  };
+  
+  
+  
 
   const paginate = (data, page) => data.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
   
@@ -216,14 +270,14 @@ const ClientJobs = () => {
                           <Button 
                             variant="success" 
                             size="sm"
-                            onClick={() => handleProposal(item.jobId, item.freelancerId, item.proposalId, 'accept')}
+                            onClick={() => handleProposal(item.proposalId, item.freelancerId, item.jobId, 'accept')}
                           >
                             Accept
                           </Button>
                           <Button 
                             variant="danger" 
                             size="sm"
-                            onClick={() => handleProposal(item.jobId, item.freelancerId, item.proposalId, 'reject')}
+                            onClick={() => handleProposal(item.proposalId, item.freelancerId, item.jobId, 'reject')}
                           >
                             Reject
                           </Button>

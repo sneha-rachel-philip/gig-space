@@ -34,9 +34,12 @@ export const uploadJobFile = (jobId, formData) => axiosInstance.post(`/jobs/${jo
   
 // Contract routes
 export const createContract = (data) => axiosInstance.post('/contract/create', data);
-export const getContractsForFreelancer = () => axiosInstance.get('/contract/freelancer');
-export const getContractsForClient = () => axiosInstance.get('/contract/client');
-export const updateContractStatus = (id, status) => axiosInstance.put('/contract/update', { contractId: id, status });
+/* export const getContractsForFreelancer = () => axiosInstance.get('/contract/freelancer');
+export const getContractsForClient = () => axiosInstance.get('/contract/client'); */
+export const getContractByJobId = (jobId) => axiosInstance.get(`/contract/by-job/${jobId}`);
+export const updateContractStatus = (contractId, status) => axiosInstance.put(`/contract/update`, { contractId, status });
+export const markMilestoneAsDone = (contractId, label) => axiosInstance.post(`/contract/${contractId}/milestone/mark-done`, { label });
+  
 
 // Message routes
 export const sendMessage = (data) => axiosInstance.post('/message/send', data);
@@ -46,13 +49,16 @@ export const getUserChats = () => axiosInstance.get('/message/chats');
 // Payment routes
 export const createPayment = (data) => axiosInstance.post('/payments', data);
 export const getPaymentsForUser = () => axiosInstance.get('/payments');
+export const createStripeCheckoutSession = (data) =>axiosInstance.post('/payments/create-checkout-session', data);
 
 // Proposal routes
 export const submitProposal = (data) => axiosInstance.post('/proposal/submit', data);
-export const getProposalsForJob = (jobId) => axiosInstance.get(`/proposal/${jobId}`);
+export const getProposalsForJob = (jobId) => axiosInstance.get(`/proposal/job/${jobId}`);
 export const acceptProposal = (proposalId) => axiosInstance.put(`/proposal/${proposalId}/accept`);
 export const rejectProposal = (proposalId) => axiosInstance.put(`/proposal/${proposalId}/reject`);
 export const getProposalsForFreelancer = () => axiosInstance.get('/proposal/freelancer');
+export const getProposalById = (proposalId) => axiosInstance.get(`/proposal/id/${proposalId}`);
+
 
 // Review routes
 export const addReview = (data) => axiosInstance.post('/reviews', data);

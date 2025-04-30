@@ -3,6 +3,26 @@ import Proposal from '../models/proposal.model.js';
 import Job from '../models/job.model.js';
 import User from '../models/user.model.js';
 
+
+// Controller to fetch proposal details by ID
+export const getProposalDetails = async (req, res) => {
+  try {
+    const proposal = await Proposal.findById(req.params.id)
+      .populate('job') // Optional
+      .populate('freelancer'); // Optional
+
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposal not found' });
+    }
+
+    res.status(200).json(proposal);
+  } catch (error) {
+    console.error('Error fetching proposal:', error); // <--- check logs
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 // Submit a proposal for a job
 export const submitProposal = async (req, res) => {
   try {

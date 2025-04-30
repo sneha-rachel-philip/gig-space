@@ -1,16 +1,19 @@
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
+import SidebarUser from '../../components/SidebarUser';
 import { Outlet } from 'react-router-dom';
 import '../../styles/ClientDashboardLayout.css'; 
 const FreelancerDashboardLayout = () => {
+  const userRole = 'freelancer'; 
+
   return (
-    <div className="dashboard-container">
-      <Sidebar role="freelancer" className="sidebar" />
-      <main className="main-content">
+    <div className="d-flex">
+      <SidebarUser role={userRole} />
+      
+      <div id="content" className="p-4">
+        {/* Your main content */}
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 };
-
 export default FreelancerDashboardLayout;

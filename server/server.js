@@ -38,7 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/jobs', jobRoutes); 
 app.use('/api/proposal', proposalRoutes);
-app.use('/api/contracts', contractRoutes);
+app.use('/api/contract', contractRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);

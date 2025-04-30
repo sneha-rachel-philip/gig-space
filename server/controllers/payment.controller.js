@@ -113,6 +113,91 @@ export const paymentWebhook = async (req, res) => {
   res.status(200).json({ received: true });
 };
 
+//used
+export const verifyStripeSuccess = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ error: "Missing session ID" });
+
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId);
+    const metadata = session.metadata;
+
+    const contract = await Contract.findById(metadata.contractId);
+    if (!contract) return res.status(404).json({ error: 'Contract not found' })
+
+    // Already paid?
+    const existing = await Payment.findOne({ stripeSessionId: sessionId });
+    if (existing) {
+      return res.json({ success: true, jobId: contract.job });
+    }
+
+    const payment = new Payment({
+      contract: metadata.contractId,
+      payer: metadata.payerId,
+      receiver: metadata.receiverId,
+      amount: session.amount_total / 100,
+      stripeSessionId: sessionId,
+      milestoneLabel: metadata.milestoneLabel,
+      status: "completed",
+    });
+
+    await payment.save();
+
+    res.json({ success: true, jobId: contract.job });
+  } catch (err) {
+    console.error("Error verifying Stripe payment:", err);
+    res.status(500).json({ error: "Payment verification failed" });
+  }
+};
+
+
+//used
+export const finalizeMilestonePayment = async (req, res) => {
+  try {
+    const { sessionId } = req.query;
+
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId);
+
+    const {
+      contractId,
+      milestoneLabel,
+      payerId,
+      receiverId
+    } = session.metadata;
+
+    const amount = session.amount_total / 100;
+
+    // Save Payment
+    const payment = new Payment({
+      contract: contractId,
+      payer: payerId,
+      receiver: receiverId,
+      amount,
+      stripePaymentIntentId: session.payment_intent,
+      status: 'completed'
+    });
+
+    await payment.save();
+
+    // Update contract with milestone payment info
+    await Contract.findByIdAndUpdate(contractId, {
+      $push: {
+        milestonePayments: {
+          label: milestoneLabel,
+          amount,
+          paymentId: payment._id,
+        }
+      }
+    });
+
+    res.status(200).json({ message: 'Milestone payment recorded.' });
+  } catch (err) {
+    console.error('Finalize milestone error:', err);
+    res.status(500).json({ error: 'Could not finalize payment' });
+  }
+};
+
+//used
 export const createCheckoutSession = async (req, res) => {
   try {
     const { amount, milestoneLabel, contractId } = req.body;
@@ -143,7 +228,7 @@ export const createCheckoutSession = async (req, res) => {
         payerId: payer._id.toString(),
         receiverId: receiver._id.toString(),
       },
-      success_url: `${process.env.CLIENT_URL}/payment-success`,
+      success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&jobId=${contract.job}`,
       cancel_url: `${process.env.CLIENT_URL}/job/${contract._id}`, // or wherever you'd like
     });
 

@@ -13,6 +13,8 @@ import ProfilePage from './pages/ProfilePage';
 
 import { AuthProvider } from './context/AuthContext';
 
+import PaymentSuccess from './pages/payment/PaymentSuccess';
+
 
 // Client Dashboard
 import ClientDashboardLayout from './pages/ClientDashboard/ClientDashboardLayout';
@@ -55,14 +57,20 @@ function App() {
           <Route path="/jobs/" element={<JobCategory />} />
           <Route path="/jobs/categories/" element={<JobList />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route
-            path="/job-area/:jobId"
+          <Route path="/job-area/:jobId"
             element={
-              <PrivateRoute allowedRoles={['client', 'freelancer']}>
-                <JobArea />
-              </PrivateRoute>
-            }
-          />
+            <PrivateRoute allowedRoles={['client', 'freelancer']}>
+            <JobArea />
+            </PrivateRoute>
+            } />
+
+          <Route path="/payment-success" 
+          element={
+            <PrivateRoute allowedRoles={['client']}>
+              <PaymentSuccess />
+            </PrivateRoute>
+            } />
+
  
             <Route
              path="user/profile"
@@ -104,13 +112,9 @@ function App() {
             }
           >
             <Route path="home" element={<FreelancerHome />} />
-            {/* <Route path="projects" element={<FreelancerProjects />} />
-            <Route path="payments" element={<FreelancerPayments />} />
-            <Route path="messages" element={<FreelancerMessages />} />
-            <Route path="jobs" element={<ClientJobs />} />
-            <Route path="jobs/:id" element={<JobDetails />} /> */
-            <Route path="jobs" element={<FreelancerHome />} />
-}
+            {
+            <Route path="jobs" element={<FreelancerJobs />} />
+      }
           </Route>    
 
         </Routes>
