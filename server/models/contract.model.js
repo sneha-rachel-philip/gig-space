@@ -18,11 +18,16 @@ const contractSchema = new mongoose.Schema(
     
     startDate: { type: Date, default: Date.now },
     endDate: { type: Date },
+    budget: { type: Number, required: true },
     terms: {
+      type: String,
+    },
+
+/*     terms: {
       budget: Number,
       title: String,
       deadline: Date
-    },
+    }, */
     status: {
       type: String,
       enum: ['pending', 'active', 'completed', 'cancelled'],

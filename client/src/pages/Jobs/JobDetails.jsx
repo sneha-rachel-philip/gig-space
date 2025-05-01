@@ -7,6 +7,11 @@ import {
   deleteJob,
   closeJob,
   submitProposal,
+  getProposalsForJob,
+  acceptProposal,
+  rejectProposal,
+  getProposalById,
+  updateJobStatus,
 } from '../../services/apiRoutes';
 import { Container, Card, Button, Form, Row, Col, ListGroup, Spinner } from "react-bootstrap";
 import LayoutUser from '../../components/Layout';
@@ -21,6 +26,10 @@ const JobDetails = () => {
   const [proposedBudget, setProposedBudget] = useState('');
   const [proposedDuration, setProposedDuration] = useState('');
   const [submitMessage, setSubmitMessage] = useState('');
+  const [proposals, setProposals] = useState([]);
+  const [jobStatus, setJobStatus] = useState('');
+  const [proposalAccepted, setProposalAccepted] = useState(false);
+
 
   // Fetch job and user details
   useEffect(() => {
@@ -28,6 +37,7 @@ const JobDetails = () => {
       try {
         const jobRes = await getJobById(id);
         setJob(jobRes.data);
+        setJobStatus(jobRes.data.status);
       } catch (error) {
         console.error('Error fetching job details:', error);
       }
@@ -41,10 +51,81 @@ const JobDetails = () => {
       } finally {
         setLoadingUser(false);
       }
+
+      try {
+        const proposalsRes = await getProposalsForJob(id);
+        setProposals(proposalsRes.data);
+      } catch (error) {
+        console.error('Error fetching proposals:', error);
+      }
+      try {
+        const proposalsRes = await getProposalsForJob(id);
+        setProposals(proposalsRes.data);
+        const accepted = proposalsRes.data.some(p => p.status === 'accepted');
+        setProposalAccepted(accepted);
+      } catch (error) {
+        console.error('Error fetching proposals:', error);
+      }
+  
+      
     };
 
     fetchData();
   }, [id]);
+
+  const handleAcceptProposal = async (proposalId, freelancerId) => {
+    const confirm = window.confirm("Are you sure you want to accept this proposal? This will mark the job as 'in progress' and reject all other proposals.");
+    if (!confirm) return;
+    console.log('Accepting proposal:', proposalId, 'for freelancer:', freelancerId);
+    console.log('Job ID:', id);
+    try {
+      // 1. Update job status to "inprogress" and assign freelancer
+      await updateJobStatus(id, { status: 'inprogress', freelancerId });
+  
+      // 2. Accept this proposal
+      const acceptResponse = await acceptProposal(proposalId);
+  
+      if (acceptResponse.status === 200) {
+        console.log('Proposal accepted successfully');
+  
+        // 3. Get proposal details (for contract creation)
+        const proposalDetails = await getProposalById(proposalId);
+  
+        if (!proposalDetails) {
+          throw new Error("Proposal details not found");
+        }
+  
+        //const { budget, title, deadline } = proposalDetails;
+  
+        // 4. Create contract from accepted proposal
+       //await createContractFromProposal(id, freelancerId, proposalId, budget, title, deadline);
+  
+        // 5. Reject all other proposals
+        await Promise.all(
+          proposals
+            .filter((p) => p._id !== proposalId && p.status === 'pending')
+            .map((p) => rejectProposal(p._id))
+        );
+  
+        // 6. Update local UI state
+        const updatedProposals = proposals.map((p) =>
+          p._id === proposalId
+            ? { ...p, status: 'accepted' }
+            : { ...p, status: 'rejected' }
+        );
+  
+        setProposals(updatedProposals);
+        setJob((prev) => ({ ...prev, status: 'inprogress' }));
+        setProposalAccepted(true); // To disable other buttons and show contract area
+      } else {
+        throw new Error("Failed to accept proposal");
+      }
+    } catch (error) {
+      console.error("Error accepting proposal:", error);
+      alert("An error occurred while accepting the proposal.");
+    }
+  };
+  
 
   const handleJobAction = async (action) => {
     try {
@@ -95,6 +176,8 @@ const JobDetails = () => {
       </LayoutUser>
     );
   }
+  console.log('Loaded proposals:', proposals);
+  console.log('User Role:', userRole);
 
   return (
       <Container className="py-5">
@@ -130,28 +213,7 @@ const JobDetails = () => {
               <strong>Status:</strong> {job.status}
             </Card.Text>
           </Card.Body>
-        </Card>
-
-        {/* Client Actions */}
-        {userRole === 'client' && (
-          <Card className="shadow-sm mb-5">
-            <Card.Body>
-              <Card.Title>Proposals</Card.Title>
-              {job.freelancers.length > 0 ? (
-                <ListGroup variant="flush" className="my-3">
-                  {job.freelancers.map((freelancer) => (
-                    <ListGroup.Item key={freelancer._id}>
-                      <div>
-                        <p className="mb-1 fw-semibold">{freelancer.name}</p>
-                        <small className="text-muted">{freelancer.email}</small>
-                      </div>
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              ) : (
-                <p className="text-muted my-3">No proposals yet.</p>
-              )}
-              <div className="d-flex gap-3 mt-3">
+          <div className="d-flex gap-3 mt-3">
                 <Button
                   variant="warning"
                   onClick={() => handleJobAction('edit')}
@@ -165,8 +227,83 @@ const JobDetails = () => {
                   Delete Job
                 </Button>
               </div>
+        </Card>
+
+        {/* Client Actions */}
+        {userRole === 'client' && (
+            <Card className="shadow-sm mb-5">
+            <Card.Body>
+              <Card.Title>Proposals</Card.Title>
+              {proposals.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Freelancer</th>
+                        <th>Email</th>
+                        <th>Proposal</th>
+                        <th>Budget</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {proposals.map((proposal) => (
+                        <tr key={proposal._id}>
+                          <td>{proposal.freelancer.name}</td>
+                          <td>{proposal.freelancer.email}</td>
+                          <td>{proposal.proposalText}</td>
+                          <td>₹{proposal.proposedBudget}</td>
+                          <td>{proposal.proposedDuration}</td>
+                          <td>{proposal.status}</td>
+                          <td>
+                            {/* Disable "Accept" button if already accepted */}
+                            <Button
+                              size="sm"
+                              variant="success"
+                              disabled={proposalAccepted || proposal.status === 'accepted'}
+                              onClick={() => handleAcceptProposal(proposal._id, proposal.freelancer._id)}
+                            >
+                              Accept
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-muted my-3">No proposals yet.</p>
+              )}
+
+              {proposalAccepted && (
+                <div className="mt-4 alert alert-success">
+                  <strong>Proposal accepted.</strong> You may proceed to create the contract terms below.
+                </div>
+              )}
+
+              {proposalAccepted && (
+                <Card className="mt-4">
+                  <Card.Body>
+                    <Card.Title>Contract Creation</Card.Title>
+                    <p>(This area is reserved for entering contract terms)</p>
+                  </Card.Body>
+                </Card>
+              )}
+
+              <div className="d-flex gap-3 mt-4">
+                <Button variant="warning" onClick={() => handleJobAction('edit')}>
+                  Edit Contract
+                </Button>
+                <Button variant="danger" onClick={() => handleJobAction('delete')}>
+                  Delete Contract
+                </Button>
+              </div>
             </Card.Body>
-          </Card>
+            </Card>
+
+
         )}
 
         {/* Freelancer Actions */}

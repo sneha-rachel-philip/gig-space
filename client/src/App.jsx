@@ -37,6 +37,7 @@ import JobArea from './pages/Jobs/JobArea';
 import FreelancerDashboardLayout from './pages/FreelancerDashboard/FreelancerDashboardLayout';
 import FreelancerHome from './pages/FreelancerDashboard/FreelancerHome';
 import FreelancerJobs from './pages/FreelancerDashboard/FreelancerJobs';
+import FreelancerPayments from './pages/FreelancerDashboard/FreelancerPayments';
 
 function App() {
   return (
@@ -112,9 +113,9 @@ function App() {
             }
           >
             <Route path="home" element={<FreelancerHome />} />
-            {
+            <Route path="payments" element={<FreelancerPayments />} />
             <Route path="jobs" element={<FreelancerJobs />} />
-      }
+      
           </Route>    
 
         </Routes>
