@@ -82,48 +82,37 @@ export const getPaymentsForUser = async (req, res) => {
 export const paymentWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  console.log('Webhook received:', req.body);
-  let event;
 
+  let event;
   try {
     event = stripeClient.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
-    console.log('Webhook signature verification failed.');
-    return res.status(400).send(`Webhook error: ${err.message}`);
+    console.log('❌ Webhook signature verification failed.');
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   switch (event.type) {
-    case 'payment_intent.succeeded': {
-      const paymentIntent = event.data.object;
+    case 'checkout.session.completed': {
+      const session = event.data.object;
 
-      const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntent.id });
-      if (!payment) {
-        console.log('Payment record not found for:', paymentIntent.id);
+      const { contractId, milestoneLabel, payerId, receiverId } = session.metadata;
+      console.log('✅ Checkout session completed for contract:', contractId);
+
+      const contract = await Contract.findById(contractId);
+      if (!contract) {
+        console.log('❌ Contract not found:', contractId);
         return res.status(200).send();
       }
 
-      payment.status = 'completed';
-      await payment.save();
-
-      const contract = await Contract.findById(payment.contract);
-      if (!contract) return res.status(200).send();
-
-      console.log('🔍 Contract found:', contract._id);
-      console.log('🔍 Milestone Payments:', contract.milestonePayments);
-      console.log('🔍 Payment Milestone Label:', payment.milestoneLabel);
-
-      // Debugging the comparison between milestone label and payment milestone label
       const milestone = contract.milestonePayments.find(
-        (m) => m.label.trim().toLowerCase() === payment.milestoneLabel.trim().toLowerCase()
+        (m) => m.label.trim().toLowerCase() === milestoneLabel.trim().toLowerCase()
       );
 
       if (!milestone) {
-        console.log('❌ No matching milestone found for:', payment.milestoneLabel);
-      }
-
-      if (milestone && !milestone.paidAt) {
+        console.log('❌ No matching milestone found for:', milestoneLabel);
+      } else if (!milestone.paidAt) {
         milestone.paidAt = new Date();
-        milestone.paymentId = payment._id;
+        milestone.paymentId = session.payment_intent; // or store session.id
         await contract.save();
         console.log('✅ Milestone marked as paid:', milestone.label);
       }
@@ -140,6 +129,7 @@ export const paymentWebhook = async (req, res) => {
 
 
 
+
 //used
 export const verifyStripeSuccess = async (req, res) => {
   try {
@@ -150,15 +140,16 @@ export const verifyStripeSuccess = async (req, res) => {
     const metadata = session.metadata;
 
     const contract = await Contract.findById(metadata.contractId);
-    if (!contract) return res.status(404).json({ error: 'Contract not found' })
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
 
     // Already paid?
-    const existing = await Payment.findOne({ stripeSessionId: sessionId });
-    if (existing) {
+    let payment = await Payment.findOne({ stripeSessionId: sessionId });
+    if (payment) {
       return res.json({ success: true, jobId: contract.job });
     }
 
-    const payment = new Payment({
+    // Create new payment record
+    payment = new Payment({
       contract: metadata.contractId,
       payer: metadata.payerId,
       receiver: metadata.receiverId,
@@ -167,8 +158,18 @@ export const verifyStripeSuccess = async (req, res) => {
       milestoneLabel: metadata.milestoneLabel,
       status: "completed",
     });
-
     await payment.save();
+
+    // ✅ Update matching milestone
+    const milestone = contract.milestonePayments.find(
+      (m) => m.label.trim().toLowerCase() === metadata.milestoneLabel.trim().toLowerCase()
+    );
+
+    if (milestone && !milestone.paidAt) {
+      milestone.paidAt = new Date();
+      milestone.paymentId = payment._id;
+      await contract.save();
+    }
 
     res.json({ success: true, jobId: contract.job });
   } catch (err) {
@@ -259,6 +260,7 @@ export const createCheckoutSession = async (req, res) => {
       success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&jobId=${contract.job}`,
       cancel_url: `${process.env.CLIENT_URL}/job/${contract._id}`, // or wherever you'd like
     });
+    console.log('Stripe session metadata:', session.metadata);
 
     res.json({ url: session.url });
   } catch (error) {
