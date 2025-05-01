@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { getJobById, createStripeCheckoutSession, getContractByJobId, updateContractStatus, markMilestoneAsDone } from '../../services/apiRoutes';
+import { getJobById,
+         createStripeCheckoutSession,
+          getContractByJobId,
+          updateContractStatus,
+          markMilestoneAsDone,
+          updateJobStatus
+    } from '../../services/apiRoutes';
 import { useAuth } from '../../context/AuthContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -17,6 +23,7 @@ const JobArea = () => {
   const [contract, setContract] = useState(null);
   const [contractStatus, setContractStatus] = useState(null);
   const getPaidMilestoneLabels = contract?.milestonePayments.filter(m => m.paidAt).map(m => m.label) || [];
+  const allMilestonesPaid = contract?.milestonePayments?.every(m => m.paidAt);
 
 
   const formatDate = (date) => {
@@ -90,17 +97,24 @@ const JobArea = () => {
     }
   };
 
-  const handleMilestonePayment = async (milestone) => {
-    const amount = prompt(`Enter payment amount for "${milestone}"`);
-    if (!amount || isNaN(amount)) return;
-
+  const handleMilestonePayment = async (milestoneLabel, idx) => {
+    const milestone = contract?.milestonePayments?.[idx];
+    const expectedAmount = milestone?.amount;
+    const amount = prompt(`Pay the exact amount for "${milestone.label}" (Expected: ₹${expectedAmount})`);
+    
+    if (!amount || isNaN(amount)) return alert('Invalid amount entered.');
+    
+    if (parseFloat(amount) !== expectedAmount) {
+      return alert(`Amount must be exactly ₹{expectedAmount}`);
+    }
+  
     try {
       const res = await createStripeCheckoutSession({
-        amount: parseFloat(amount),
-        milestoneLabel: milestone,
+        amount: expectedAmount,
+        milestone: milestone.label,
         contractId: contract?._id,
       });
-
+  
       if (res.data.url) {
         window.location.href = res.data.url;
       } else {
@@ -111,6 +125,19 @@ const JobArea = () => {
       alert('Something went wrong.');
     }
   };
+
+  const handleCloseJob = async () => {
+    try {
+       await updateJobStatus(jobId, { status: 'closed' });
+      alert('Job closed successfully!');
+      // Optionally: refresh job data or navigate
+    } catch (err) {
+      console.error('Error closing job:', err);
+      alert('Failed to close the job.');
+    }
+  };
+  
+  
 /*   console.log('Paid Milestone Labels:', getPaidMilestoneLabels);
   console.log('Contract Object:', contract); */
 /*   console.log('Milestones:', job.milestones);
@@ -123,7 +150,8 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
 
   const isClient = user?.role === 'client';
   const isFreelancer = contract?.freelancer?._id === user?._id;
-  
+//  const getPaidMilestoneLabels = contract?.milestonePayments?.filter(m => m.paidAt).map(m => m.label) || [];
+
 
 
   return (
@@ -195,7 +223,7 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
             </div>
             <div className="col-md-6">
               <p className="mb-1 fw-bold">Budget:</p>
-              <p className="text-success fw-bold">${job?.budget}</p>
+              <p className="text-success fw-bold">₹{job?.budget}</p>
             </div>
             <div className="col-md-6">
               <p className="mb-1 fw-bold">Deadline:</p>
@@ -256,7 +284,12 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
                               className="btn btn-sm btn-outline-success"
                               onClick={() => handleMilestonePayment(milestone, idx)}
                             >
-                              Release Payment
+                              Release Payment - ₹{contract?.milestonePayments?.[idx]?.amount}
+                            </button>
+                          )}
+                          {isClient && isPaid && (
+                            <button className="btn btn-sm btn-success" disabled>
+                              Payment Released
                             </button>
                           )}
                     
@@ -403,6 +436,12 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
               </div>
             </div>
           </div>
+          {isClient && allMilestonesPaid && job?.status !== 'closed' && (
+              <button className="btn btn-danger" onClick={handleCloseJob}>
+                Close Job
+              </button>
+            )}
+          
         </div>
       </div>
 

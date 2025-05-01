@@ -9,27 +9,29 @@ const stripeClient = stripe(process.env.STRIPE_SECRET_KEY); // Stripe secret key
 // Create a payment for a contract
 export const createPayment = async (req, res) => {
   try {
-    const { contractId, paymentMethodId, amount } = req.body;
+    const { contractId, paymentMethodId, amount, milestoneLabel } = req.body;
 
-    // Ensure the user is involved in the contract
     const contract = await Contract.findById(contractId).populate('client freelancer');
-    if (!contract) {
-      return res.status(404).json({ error: 'Contract not found' });
-    }
+    if (!contract) return res.status(404).json({ error: 'Contract not found' });
 
     const payer = req.user._id.equals(contract.client._id) ? contract.client : contract.freelancer;
     const receiver = payer.equals(contract.client._id) ? contract.freelancer : contract.client;
 
-    // Create a Stripe Payment Intent (this handles the payment process)
+    // Create a Stripe Payment Intent
     const paymentIntent = await stripeClient.paymentIntents.create({
-      amount: amount * 100, // Stripe accepts amount in cents, so multiply by 100
+      amount: amount * 100,
       currency: 'usd',
       payment_method: paymentMethodId,
-      confirm: true, // Confirm the payment immediately
-      return_url: 'http://localhost:3000/payment-success',  // Placeholder return URL for testing
+      confirm: true,
+      metadata: {
+        contractId,
+        milestoneLabel,
+        payerId: payer._id.toString(),
+        receiverId: receiver._id.toString(),
+      },
     });
 
-    // Save the payment details to the database
+    // Save the payment (status is 'pending' for now)
     const payment = new Payment({
       contract: contractId,
       payer: payer._id,
@@ -37,25 +39,34 @@ export const createPayment = async (req, res) => {
       amount,
       stripePaymentIntentId: paymentIntent.id,
       paymentMethodId,
-      status: paymentIntent.status === 'succeeded' ? 'completed' : 'pending',
+      milestoneLabel,
+      status: 'pending',
     });
 
     await payment.save();
 
-    res.status(201).json({ message: 'Payment created successfully', payment });
+    res.status(201).json({ message: 'Payment initiated successfully', payment });
   } catch (error) {
     console.error('Error creating payment:', error);
     res.status(500).json({ error: 'Error creating payment' });
   }
 };
 
+
+//used
 // Get all payments for a user
 export const getPaymentsForUser = async (req, res) => {
   try {
     const payments = await Payment.find({
       $or: [{ payer: req.user._id }, { receiver: req.user._id }],
     })
-      .populate('contract')
+      .populate({
+        path: 'contract',
+        populate: [
+          { path: 'job', select: 'title' },
+          { path: 'client', select: 'name' },
+        ],
+      })
       .populate('payer', 'name')
       .populate('receiver', 'name');
 
@@ -66,11 +77,12 @@ export const getPaymentsForUser = async (req, res) => {
   }
 };
 
+
 // Handle payment webhook (optional, for Stripe events)
 export const paymentWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
+  console.log('Webhook received:', req.body);
   let event;
 
   try {
@@ -80,38 +92,53 @@ export const paymentWebhook = async (req, res) => {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
 
-  // Handle the event based on its type
   switch (event.type) {
-    case 'payment_intent.succeeded':
+    case 'payment_intent.succeeded': {
       const paymentIntent = event.data.object;
+
       const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntent.id });
-
-      if (payment) {
-        payment.status = 'completed';
-        await payment.save();
-        console.log('Payment succeeded:', paymentIntent.id);
+      if (!payment) {
+        console.log('Payment record not found for:', paymentIntent.id);
+        return res.status(200).send();
       }
-      break;
 
-    case 'payment_intent.payment_failed':
-      const paymentFailed = event.data.object;
-      const failedPayment = await Payment.findOne({ stripePaymentIntentId: paymentFailed.id });
+      payment.status = 'completed';
+      await payment.save();
 
-      if (failedPayment) {
-        failedPayment.status = 'failed';
-        await failedPayment.save();
-        console.log('Payment failed:', paymentFailed.id);
+      const contract = await Contract.findById(payment.contract);
+      if (!contract) return res.status(200).send();
+
+      console.log('🔍 Contract found:', contract._id);
+      console.log('🔍 Milestone Payments:', contract.milestonePayments);
+      console.log('🔍 Payment Milestone Label:', payment.milestoneLabel);
+
+      // Debugging the comparison between milestone label and payment milestone label
+      const milestone = contract.milestonePayments.find(
+        (m) => m.label.trim().toLowerCase() === payment.milestoneLabel.trim().toLowerCase()
+      );
+
+      if (!milestone) {
+        console.log('❌ No matching milestone found for:', payment.milestoneLabel);
       }
-      break;
 
-    // Handle other event types as needed
+      if (milestone && !milestone.paidAt) {
+        milestone.paidAt = new Date();
+        milestone.paymentId = payment._id;
+        await contract.save();
+        console.log('✅ Milestone marked as paid:', milestone.label);
+      }
+
+      break;
+    }
 
     default:
       console.log('Unhandled event type:', event.type);
   }
 
-  res.status(200).json({ received: true });
+  res.status(200).send();
 };
+
+
 
 //used
 export const verifyStripeSuccess = async (req, res) => {
@@ -201,7 +228,7 @@ export const finalizeMilestonePayment = async (req, res) => {
 export const createCheckoutSession = async (req, res) => {
   try {
     const { amount, milestoneLabel, contractId } = req.body;
-
+    console.log('Incoming create checkout session request:', req.body);
     const contract = await Contract.findById(contractId).populate('client freelancer');
     if (!contract) return res.status(404).json({ error: 'Contract not found' });
 
@@ -217,7 +244,7 @@ export const createCheckoutSession = async (req, res) => {
           product_data: {
             name: `Milestone: ${milestoneLabel}`,
           },
-          unit_amount: amount * 100, // cents
+          unit_amount: amount * 100, 
         },
         quantity: 1,
       }],
@@ -228,6 +255,7 @@ export const createCheckoutSession = async (req, res) => {
         payerId: payer._id.toString(),
         receiverId: receiver._id.toString(),
       },
+      
       success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&jobId=${contract.job}`,
       cancel_url: `${process.env.CLIENT_URL}/job/${contract._id}`, // or wherever you'd like
     });
@@ -236,6 +264,42 @@ export const createCheckoutSession = async (req, res) => {
   } catch (error) {
     console.error('Error creating checkout session:', error);
     res.status(500).json({ error: 'Could not initiate payment' });
+  }
+};
+
+//used
+export const requestWithdrawal = async (req, res) => {
+  try {
+    const { paymentIds } = req.body;
+
+    if (!paymentIds || !Array.isArray(paymentIds) || paymentIds.length === 0) {
+      return res.status(400).json({ error: 'No payments selected for withdrawal.' });
+    }
+
+    // Optionally: ensure they belong to the logged-in freelancer
+    const freelancerId = req.user._id;
+
+    const updated = await Payment.updateMany(
+      {
+        _id: { $in: paymentIds },
+        receiver: freelancerId,
+        status: 'completed',
+      },
+      {
+        $set: {
+          status: 'withdrawn',
+          withdrawnAt: new Date(),
+        },
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: `${updated.modifiedCount} payments marked as withdrawn.`,
+    });
+  } catch (err) {
+    console.error('Withdrawal error:', err);
+    return res.status(500).json({ error: 'Withdrawal failed.' });
   }
 };
 

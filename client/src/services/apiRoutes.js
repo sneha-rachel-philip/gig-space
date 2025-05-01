@@ -50,6 +50,8 @@ export const getUserChats = () => axiosInstance.get('/message/chats');
 export const createPayment = (data) => axiosInstance.post('/payments', data);
 export const getPaymentsForUser = () => axiosInstance.get('/payments');
 export const createStripeCheckoutSession = (data) =>axiosInstance.post('/payments/create-checkout-session', data);
+export const requestWithdrawal = (data) =>axiosInstance.post('/payments/withdraw', data);
+  
 
 // Proposal routes
 export const submitProposal = (data) => axiosInstance.post('/proposal/submit', data);

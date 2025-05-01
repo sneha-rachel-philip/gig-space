@@ -1,7 +1,7 @@
 // routes/payment.routes.js
 import express from 'express';
 import { authenticate } from '../middlewares/authMiddleware.js';
-import { createPayment, getPaymentsForUser, paymentWebhook, createCheckoutSession, verifyStripeSuccess } from '../controllers/payment.controller.js';
+import { createPayment, getPaymentsForUser, paymentWebhook, createCheckoutSession, verifyStripeSuccess, requestWithdrawal } from '../controllers/payment.controller.js';
 
 const router = express.Router();
 
@@ -20,6 +20,8 @@ router.post("/verify-success", verifyStripeSuccess);
 
 // POST /api/payments/create-checkout-session - Create a Stripe Checkout session
 router.post('/create-checkout-session', authenticate, createCheckoutSession);
+
+router.post('/withdraw', authenticate, requestWithdrawal);
 
 
 // POST /api/payments/webhook - Stripe webhook for payment status updates

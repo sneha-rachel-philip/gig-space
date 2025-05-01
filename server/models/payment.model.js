@@ -24,7 +24,7 @@ const paymentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: ['pending', 'completed', 'withdrawn'],
       default: 'pending',
     },
     stripePaymentIntentId: {
@@ -32,6 +32,12 @@ const paymentSchema = new mongoose.Schema(
     },
     paymentMethodId: {
       type: String, // ID of the payment method used
+    },
+    milestoneLabel: { type: String, required: true },
+
+    withdrawnAt: {
+      type: Date, 
+      default: null,
     },
   },
   { timestamps: true }
