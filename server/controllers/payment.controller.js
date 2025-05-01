@@ -235,7 +235,9 @@ export const createCheckoutSession = async (req, res) => {
 
     const payer = req.user._id.equals(contract.client._id) ? contract.client : contract.freelancer;
     const receiver = payer.equals(contract.client._id) ? contract.freelancer : contract.client;
-
+    const CLIENT_URL = process.env.NODE_ENV === 'production'
+    ? process.env.CLIENT_URL  // Use production URL if in production
+    : 'http://localhost:5173'; 
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -256,9 +258,11 @@ export const createCheckoutSession = async (req, res) => {
         payerId: payer._id.toString(),
         receiverId: receiver._id.toString(),
       },
+
+// Use local URL if in development
       
-      success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&jobId=${contract.job}`,
-      cancel_url: `${process.env.CLIENT_URL}/job/${contract._id}`, // or wherever you'd like
+      success_url: `${CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&jobId=${contract.job}`,
+      cancel_url: `${CLIENT_URL}/job/${contract._id}`, // or wherever you'd like
     });
     console.log('Stripe session metadata:', session.metadata);
 
