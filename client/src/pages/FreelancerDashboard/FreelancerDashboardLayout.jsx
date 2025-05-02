@@ -1,6 +1,8 @@
 import React from 'react';
 import SidebarUser from '../../components/SidebarUser';
 import { Outlet } from 'react-router-dom';
+import { Container, Row, Col } from 'react-bootstrap';
+
 import '../../styles/ClientDashboardLayout.css'; 
 const FreelancerDashboardLayout = () => {
   const userRole = 'freelancer'; 
