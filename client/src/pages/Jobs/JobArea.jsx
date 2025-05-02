@@ -165,8 +165,15 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
           <div className="badge bg-secondary mb-2">{job.status}</div>
           <p className="lead">{job.description}</p>
           <div className="d-flex text-muted mb-3">
-            <div className="me-3"><i className="bi bi-person-fill"></i> Client: {job?.client?.name || '—'}</div>
-            <div><i className="bi bi-person-circle"></i> Freelancer: {job?.assignedFreelancer?.name || '—'}</div>
+            <div className="me-3">
+              <i className="bi bi-person-fill"></i> 
+              Client:   <Link to={`/user/${job?.client?.id}/profile`}>{job?.client?.name || '—'}
+              </Link>
+              </div>
+            <div><i className="bi bi-person-circle"></i> 
+            Freelancer:   <Link to={`/user/${job?.assignedFreelancer?.id}/profile`}>{job?.assignedFreelancer?.name || '—'}
+              </Link>
+              </div>
           </div>
         </div>
       </div>

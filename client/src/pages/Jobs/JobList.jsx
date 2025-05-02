@@ -35,7 +35,7 @@ const JobList = () => {
 
       // Checking if response contains jobs and updating the state
       if (res && res.data && res.data.jobs) {
-        setJobs(res.data.jobs); // Set the jobs in the state
+        setJobs(res.data.jobs.filter(job => job.status === 'open')); // Set the jobs in the state
         setTotalPages(res.data.pages || 1); // Set the total number of pages
       } else {
         console.error('No jobs found in the response.');

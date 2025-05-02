@@ -38,6 +38,7 @@ import FreelancerDashboardLayout from './pages/FreelancerDashboard/FreelancerDas
 import FreelancerHome from './pages/FreelancerDashboard/FreelancerHome';
 import FreelancerJobs from './pages/FreelancerDashboard/FreelancerJobs';
 import FreelancerPayments from './pages/FreelancerDashboard/FreelancerPayments';
+import FreelancerMessages from './pages/FreelancerDashboard/FreelancerMessages';
 
 function App() {
   return (
@@ -74,7 +75,7 @@ function App() {
 
  
             <Route
-             path="user/profile"
+             path="/user/:userId/profile"
              element={
               <PrivateRoute allowedRoles={['client', 'freelancer', 'admin']}>
                 <ProfilePage />
@@ -115,6 +116,9 @@ function App() {
             <Route path="home" element={<FreelancerHome />} />
             <Route path="payments" element={<FreelancerPayments />} />
             <Route path="jobs" element={<FreelancerJobs />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="messages" element={<FreelancerMessages />} />
+
       
           </Route>    
 

@@ -1,14 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Accordion, Card, Button, Form, Badge, Row, Col, Modal, Spinner } from 'react-bootstrap';
+import { Accordion, Card, Button, Form, Badge, Row, Col, Spinner } from 'react-bootstrap';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import { useAuth } from '../context/AuthContext';
 import { getCurrentUser, getUserById, updateUser } from '../services/apiRoutes';
 
 function ProfilePage() {
   const { userId } = useParams();
-  const { user } = useAuth(); // Current logged in user
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({});
   const [reviews, setReviews] = useState([]);
@@ -93,14 +93,6 @@ function ProfilePage() {
     } catch (err) {
       console.error('Error updating profile', err);
     }
-  };
-
-  const displayBasedOnRole = (field) => {
-    if (!profile) return false;
-    if (profile.role === 'freelancer') return true;
-    if (profile.role === 'client' && ['company', 'bio', 'location'].includes(field)) return true;
-    if (profile.role === 'admin') return true;
-    return false;
   };
 
   if (isLoading || !profile) {
@@ -387,10 +379,9 @@ function ProfilePage() {
         </Col>
       </Row>
 
-      {/* Password Modal */}
-        {showPasswordModal && (
-          <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
-        )}
+      {showPasswordModal && (
+        <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+      )}
     </div>
   );
 }
