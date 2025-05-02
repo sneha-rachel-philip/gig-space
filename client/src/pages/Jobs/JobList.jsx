@@ -23,19 +23,20 @@ const JobList = () => {
       const params = {
         category: selectedCategory,
         page,
-        limit: 5,
+        limit: 10,
         search,
         minBudget: budgetRange[0],
         maxBudget: budgetRange[1],
       };
 
-      console.log('Fetching jobs with params:', params);
+      //console.log('Fetching jobs with params:', params);
       const res = await getJobs(params); 
-      console.log('API Response:', res);
+     // console.log('API Response:', res);
 
       // Checking if response contains jobs and updating the state
       if (res && res.data && res.data.jobs) {
-        setJobs(res.data.jobs.filter(job => job.status === 'open')); // Set the jobs in the state
+        setJobs(res.data.jobs);  // Set the jobs in the state
+        //console.log('Jobs fetched:', res.data.jobs);
         setTotalPages(res.data.pages || 1); // Set the total number of pages
       } else {
         console.error('No jobs found in the response.');

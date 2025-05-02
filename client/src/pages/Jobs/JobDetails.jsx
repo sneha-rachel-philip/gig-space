@@ -416,7 +416,7 @@ const JobDetails = () => {
                                   </div>
                                   <div>
                                     <div className="fw-bold">
-                                      <Link to="/freelancer/profile" className="text-decoration-none">
+                                      <Link to={`/user/${proposal.freelancer._id}/profile`} className="text-decoration-none">
                                         {proposal.freelancer.name}
                                       </Link>
                                     </div>

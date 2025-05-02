@@ -55,7 +55,7 @@ export const getJobsByCategory = async (req, res) => {
 // GET /api/jobs - Get all jobs
 export const getJobs = async (req, res) => {
   try {
-    const filter = {};
+    const filter = { status: 'open'};
 
     // Category filter
     if (req.query.category) {
@@ -98,7 +98,7 @@ export const getJobs = async (req, res) => {
       .populate('freelancers', 'name email');
 
     const totalJobs = await Job.countDocuments(filter);
-
+    
     res.json({
       jobs,
       total: totalJobs,

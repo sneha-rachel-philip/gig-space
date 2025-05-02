@@ -13,6 +13,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import FileUploadSection from '../../components/FileUploadSection';
 import JobChat from '../../components/JobChat';
 import { toast, ToastContainer } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 const JobArea = () => {
   const { jobId } = useParams();
@@ -293,9 +294,12 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
                             <button
                               className="btn btn-sm btn-outline-success"
                               onClick={() => handleMilestonePayment(contractMilestone?.label, idx)}
+                              disabled={!isCompleted} 
                             >
-                              Release Payment - ₹{contract?.milestonePayments?.[idx]?.amount}
-                            </button>
+                              {isCompleted 
+                                    ? `Release Payment - ₹${contract?.milestonePayments?.[idx]?.amount}`
+                                    : "Waiting for completion"} 
+                             </button>
                           )}
                           {isClient && isPaid && (
                             <button className="btn btn-sm btn-success" disabled>
@@ -475,3 +479,17 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
 };
 
 export default JobArea;
+
+{/* Freelancer Mark as Done Button Logic */}
+/* {isFreelancer && !isPaid && (
+  <button
+    className="btn btn-sm btn-outline-warning ms-3"
+    data-bs-toggle="modal"
+    data-bs-target="#confirmMarkDoneModal"
+    onClick={() => setSelectedMilestone(milestone)} 
+    disabled={isCompleted || completedMilestones.includes(milestone) || contractStatus !== 'active'}
+    title={contractStatus !== 'active' ? "Contract must be accepted first" : ""}
+  >
+    {contractStatus !== 'active' ? "Contract Not Active" : "Mark as Done"}
+  </button>
+)} */

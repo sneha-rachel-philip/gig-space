@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'; // Correct path
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, userRole, loading, logout } = useAuth(); // 🛠 also get logout function!
+  const { isAuthenticated, userRole, loading, logout, currentUser } = useAuth(); // 🛠 also get logout function!
 
   if (loading) {
     return (
@@ -96,7 +96,8 @@ function Navbar() {
                     className="btn btn-light fw-bold ms-3"
                     to={getDashboardPath()}
                   >
-                    Go to Dashboard
+                      {currentUser?.name ? `${currentUser.name}'s Dashboard` : 'Dashboard'}
+
                   </Link>
                 </li>
                 <li className="nav-item">
