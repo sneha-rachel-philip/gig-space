@@ -27,7 +27,7 @@ const paymentSchema = new mongoose.Schema(
       enum: ['pending', 'completed', 'withdrawn'],
       default: 'pending',
     },
-    stripePaymentIntentId: {
+    stripeSessionId: {
       type: String, // ID provided by Stripe for the payment
     },
     paymentMethodId: {

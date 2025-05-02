@@ -98,10 +98,11 @@ const JobArea = () => {
   };
 
   const handleMilestonePayment = async (milestoneLabel, idx) => {
-    const milestone = contract?.milestonePayments?.[idx];
-    const expectedAmount = milestone?.amount;
-    const amount = prompt(`Pay the exact amount for "${milestone.label}" (Expected: ₹${expectedAmount})`);
-    
+    const milestoneDet = contract?.milestonePayments?.[idx];
+    const milestone=milestoneLabel
+    if (!milestone) return alert('Invalid milestone.');
+    const expectedAmount = milestoneDet?.amount;
+    const amount = prompt(`Pay the exact amount for "${milestoneDet.label}" (Expected: ₹${expectedAmount})`);
     if (!amount || isNaN(amount)) return alert('Invalid amount entered.');
     
     if (parseFloat(amount) !== expectedAmount) {
@@ -111,10 +112,11 @@ const JobArea = () => {
     try {
       const res = await createStripeCheckoutSession({
         amount: expectedAmount,
-        milestone: milestone.label,
+        //milestone: milestone.label,
+        milestoneLabel: milestone,
         contractId: contract?._id,
       });
-  
+      console.log('Stripe session response:', res.data);
       if (res.data.url) {
         window.location.href = res.data.url;
       } else {
@@ -128,9 +130,9 @@ const JobArea = () => {
 
   const handleCloseJob = async () => {
     try {
-       await updateJobStatus(jobId, { status: 'closed' });
+      await updateJobStatus(jobId, { status: 'closed' });
       alert('Job closed successfully!');
-      // Optionally: refresh job data or navigate
+      setJob(prev => ({ ...prev, status: 'closed' })); 
     } catch (err) {
       console.error('Error closing job:', err);
       alert('Failed to close the job.');
@@ -267,6 +269,7 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
                       const contractMilestone = contract?.milestonePayments?.find(m => m.label === milestone);
                       const isCompleted = contractMilestone?.completedByFreelancer;
 
+  
                       return (
                         <div
                           key={idx}
@@ -282,7 +285,7 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
                           {isClient && !isPaid && (
                             <button
                               className="btn btn-sm btn-outline-success"
-                              onClick={() => handleMilestonePayment(milestone, idx)}
+                              onClick={() => handleMilestonePayment(contractMilestone?.label, idx)}
                             >
                               Release Payment - ₹{contract?.milestonePayments?.[idx]?.amount}
                             </button>
@@ -436,11 +439,17 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
               </div>
             </div>
           </div>
-          {isClient && allMilestonesPaid && job?.status !== 'closed' && (
+          {isClient && allMilestonesPaid && (
+            job?.status !== 'closed' ? (
               <button className="btn btn-danger" onClick={handleCloseJob}>
                 Close Job
               </button>
-            )}
+            ) : (
+              <div className="alert alert-info mt-2" role="alert">
+                This job has been successfully closed.
+              </div>
+            )
+          )}
           
         </div>
       </div>

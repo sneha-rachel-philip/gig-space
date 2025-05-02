@@ -5,41 +5,46 @@ import User from '../models/user.model.js';
 // Create a new contract (Client accepts the proposal and a contract is formed)
 export const createContract = async (req, res) => {
   try {
-    const { jobId, freelancerId, terms } = req.body;
-    console.log('Incoming contract request body:', req.body);
+    // Extract required fields from incoming body
+    const {
+      job,
+      freelancer,
+      client,
+      milestonePayments,
+      startDate,
+      endDate,
+      budget,
+      title,
+    } = req.body;
 
-    // Ensure the user is a client
-    if (req.user.role !== 'client') {
-      return res.status(403).json({ error: 'Only clients can create contracts.' });
-    }
-
-    // Check if the job exists
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({ error: 'Job not found.' });
-    }
-
-    // Check if the freelancer is correct
-    const freelancer = await User.findById(freelancerId);
-    if (!freelancer || freelancer.role !== 'freelancer') {
-      return res.status(400).json({ error: 'Invalid freelancer.' });
-    }
+    // Convert strings to correct types
+    const contractData = {
+      job: job._id,  // job should be ObjectId
+      freelancer: freelancer._id,  // freelancer should be ObjectId
+      client: client?._id ?? client,
+      milestonePayments: milestonePayments.map((milestone) => ({
+        label: milestone.label,
+        amount: Number(milestone.amount),  // Convert amount to number
+        completedAt: new Date(milestone.completedAt),  // Convert completedAt to Date
+      })),
+      startDate: new Date(startDate),  // Convert startDate to Date
+      endDate: new Date(endDate),  // Convert endDate to Date
+      budget: Number(budget),  // Convert budget to number
+      title: title,  // Title is a string, as it is
+      status: 'pending',  // Default status
+    };
 
     // Create the contract
-    const contract = new Contract({
-      job: jobId,
-      freelancer: freelancerId,
-      client: req.user._id, // Client's ID (the one who created the contract)
-      terms,
-      milestonePayments: milestones,
-    });
+    const contract = new Contract(contractData);
 
+    // Save the contract to the database
     await contract.save();
 
-    res.status(201).json({ message: 'Contract created successfully.', contract });
-  } catch (err) {
-    console.error('Error creating contract:', err); // 🛠️ Add this
-    res.status(500).json({ error: 'Error creating contract' });
+    // Send response
+    res.status(201).json({ message: 'Contract created successfully', contract });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error creating contract', error: error.message });
   }
 };
 

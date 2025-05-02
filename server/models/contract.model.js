@@ -9,7 +9,7 @@ const contractSchema = new mongoose.Schema(
       {
         label: String,
         amount: Number,
-        paidAt: { type: Date },
+        paidAt: { type: Date, default: null },
         paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
         completedByFreelancer: { type: Boolean, default: false }, 
         completedAt: Date                                           
@@ -30,8 +30,8 @@ const contractSchema = new mongoose.Schema(
     }, */
     status: {
       type: String,
-      enum: ['pending', 'active', 'completed', 'cancelled'],
-      default: 'pending',
+      enum: ['none', 'pending', 'active', 'completed', 'cancelled'],
+      default: 'none',
     },
   },
   { timestamps: true }

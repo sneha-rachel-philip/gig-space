@@ -5,6 +5,7 @@ import Payment from '../models/payment.model.js';
 import Contract from '../models/contract.model.js';
 import User from '../models/user.model.js';
 
+import mongoose from 'mongoose';
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY); // Stripe secret key
 // Create a payment for a contract
 export const createPayment = async (req, res) => {
@@ -136,6 +137,8 @@ export const verifyStripeSuccess = async (req, res) => {
     const { sessionId } = req.body;
     if (!sessionId) return res.status(400).json({ error: "Missing session ID" });
 
+    console.log("Verifying session ID:", sessionId);
+
     const session = await stripeClient.checkout.sessions.retrieve(sessionId);
     const metadata = session.metadata;
 
@@ -159,6 +162,10 @@ export const verifyStripeSuccess = async (req, res) => {
       status: "completed",
     });
     await payment.save();
+    await User.findByIdAndUpdate(
+      metadata.receiverId,
+      { $inc: { walletBalance: session.amount_total / 100 } }
+    );
 
     // ✅ Update matching milestone
     const milestone = contract.milestonePayments.find(
@@ -196,7 +203,8 @@ export const finalizeMilestonePayment = async (req, res) => {
     const amount = session.amount_total / 100;
 
     // Save Payment
-    const payment = new Payment({
+    
+   /*  const payment = new Payment({
       contract: contractId,
       payer: payerId,
       receiver: receiverId,
@@ -205,7 +213,7 @@ export const finalizeMilestonePayment = async (req, res) => {
       status: 'completed'
     });
 
-    await payment.save();
+    await payment.save(); */
 
     // Update contract with milestone payment info
     await Contract.findByIdAndUpdate(contractId, {
@@ -254,7 +262,7 @@ export const createCheckoutSession = async (req, res) => {
       customer_email: contract.client.email,
       metadata: {
         contractId,
-        milestoneLabel,
+        milestoneLabel: milestoneLabel,
         payerId: payer._id.toString(),
         receiverId: receiver._id.toString(),
       },
@@ -284,6 +292,30 @@ export const requestWithdrawal = async (req, res) => {
 
     // Optionally: ensure they belong to the logged-in freelancer
     const freelancerId = req.user._id;
+
+    const totalAmount = await Payment.aggregate([
+      {
+        $match: {
+          _id: { $in: paymentIds.map(id => new mongoose.Types.ObjectId(id)) },
+          receiver: new mongoose.Types.ObjectId(freelancerId),
+          status: 'completed',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$amount' },
+        },
+      },
+    ]);
+    
+    const amountToWithdraw = totalAmount[0]?.total || 0;
+    
+    // Deduct from wallet
+    await User.findByIdAndUpdate(freelancerId, {
+      $inc: { walletBalance: -amountToWithdraw },
+    });
+    
 
     const updated = await Payment.updateMany(
       {

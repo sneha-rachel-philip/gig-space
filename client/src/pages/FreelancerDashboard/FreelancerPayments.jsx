@@ -1,10 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { getPaymentsForUser, requestWithdrawal } from '../../services/apiRoutes';
+import { getPaymentsForUser, requestWithdrawal, getCurrentUser } from '../../services/apiRoutes';
 
 const FreelancerPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [isWithdrawn, setIsWithdrawn] = useState(false); // Track if withdrawal has been made
 
+  // Fetch wallet balance from the current user's data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await getCurrentUser(); // Fetch current user
+        setWalletBalance(res.data.walletBalance);
+      } catch (err) {
+        console.error('Failed to fetch user', err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Fetch payments for the logged-in freelancer
   const fetchPayments = async () => {
     try {
       const res = await getPaymentsForUser();
@@ -24,15 +40,19 @@ const FreelancerPayments = () => {
   const withdrawnPayments = payments.filter(p => p.status === 'withdrawn');
 
   const handleWithdraw = async () => {
-    if (!availablePayments.length) return alert('No funds available.');
+    if (!availablePayments.length) return alert('No funds available for withdrawal.');
+
     try {
+      // Pass the IDs of the available payments to request the withdrawal
       const res = await requestWithdrawal({
         paymentIds: availablePayments.map(p => p._id),
       });
+
       alert(res.data.message || 'Withdrawal requested.');
-      fetchPayments();
+      setIsWithdrawn(true); // Set the flag to true after successful withdrawal
+      fetchPayments(); // Refresh payments to update status
     } catch (err) {
-      console.error(err);
+      console.error('Withdrawal error:', err);
       alert('Withdrawal failed.');
     }
   };
@@ -48,8 +68,14 @@ const FreelancerPayments = () => {
       <p className="fw-bold">
         ₹{availablePayments.reduce((sum, p) => sum + p.amount, 0)}
       </p>
-      <button className="btn btn-primary mb-3" onClick={handleWithdraw}>
-        Withdraw Now
+
+      {/* Withdraw button logic: Disable if the withdrawal has already been done */}
+      <button
+        className="btn btn-primary mb-3"
+        onClick={handleWithdraw}
+        disabled={isWithdrawn} // Disable if the withdrawal was successful
+      >
+        {isWithdrawn ? 'Withdrawal Completed' : 'Withdraw Now'}
       </button>
 
       <h4>Pending Payments</h4>
