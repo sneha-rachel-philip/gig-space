@@ -1,4 +1,3 @@
-// src/components/Sidebar.js
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -12,13 +11,13 @@ import {
   FaCog
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import 'bootstrap/dist/css/bootstrap.min.css';
-//import './Sidebar.css';
+import { Nav, Button, Image, Badge } from 'react-bootstrap';
 
-const SidebarUser = () => {
+const SidebarUser = ({ role }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const { currentUser, userRole, logout } = useAuth();
+  const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const userRole = role || 'client';
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -34,16 +33,16 @@ const SidebarUser = () => {
     const commonItems = [
       {
         to: userRole === 'client' ? '/client/home' :
-            userRole==='freelancer'? '/freelancer/home':
+            userRole === 'freelancer' ? '/freelancer/home' :
             '/admin/home',
-        icon: <FaHome className={collapsed ? "mx-auto" : "me-3"} />,
+        icon: <FaHome className={collapsed ? "mx-auto" : "me-2"} size={18} />,
         text: 'Home'
       },
       {
         to: userRole === 'client' ? '/client/profile' :
-        userRole==='freelancer'? '/freelancer/profile':
+        userRole === 'freelancer' ? '/freelancer/profile' :
         '/admin/profile',
-        icon: <FaUserCircle className={collapsed ? "mx-auto" : "me-3"} />,
+        icon: <FaUserCircle className={collapsed ? "mx-auto" : "me-2"} size={18} />,
         text: 'Profile'
       }
     ];
@@ -54,12 +53,12 @@ const SidebarUser = () => {
         ...commonItems,
         {
           to: '/admin/users',
-          icon: <FaUserCircle className={collapsed ? "mx-auto" : "me-3"} />,
+          icon: <FaUserCircle className={collapsed ? "mx-auto" : "me-2"} size={18} />,
           text: 'Manage Users'
         },
         {
           to: '/admin/settings',
-          icon: <FaCog className={collapsed ? "mx-auto" : "me-3"} />,
+          icon: <FaCog className={collapsed ? "mx-auto" : "me-2"} size={18} />,
           text: 'Settings'
         }
       ];
@@ -70,17 +69,17 @@ const SidebarUser = () => {
       ...commonItems,
       {
         to: userRole === 'client' ? '/client/payments' : '/freelancer/payments',
-        icon: <FaMoneyBill className={collapsed ? "mx-auto" : "me-3"} />,
+        icon: <FaMoneyBill className={collapsed ? "mx-auto" : "me-2"} size={18} />,
         text: 'Payments'
       },
       {
         to: userRole === 'client' ? '/client/messages' : '/freelancer/messages',
-        icon: <FaEnvelope className={collapsed ? "mx-auto" : "me-3"} />,
+        icon: <FaEnvelope className={collapsed ? "mx-auto" : "me-2"} size={18} />,
         text: 'Messages'
       },
       {
         to: userRole === 'client' ? '/client/jobs' : '/freelancer/jobs',
-        icon: <FaBriefcase className={collapsed ? "mx-auto" : "me-3"} />,
+        icon: <FaBriefcase className={collapsed ? "mx-auto" : "me-2"} size={18} />,
         text: 'My Jobs'
       }
     ];
@@ -89,64 +88,106 @@ const SidebarUser = () => {
   const navItems = getNavItems();
 
   return (
-    <div className={`sidebar-wrapper ${collapsed ? 'collapsed' : ''}`}>
-      <nav id="sidebar" className="bg-light">
-        <div className="sidebar-header d-flex justify-content-between align-items-center p-3 border-bottom">
-          {!collapsed && <h5 className="m-0 text-dark">Dashboard</h5>}
-          <button 
-            className="btn btn-link text-secondary" 
-            onClick={toggleSidebar}
-          >
-            <FaBars />
-          </button>
-        </div>
+    <div className={`sidebar ${collapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`} style={{
+      width: collapsed ? '70px' : '240px',
+      transition: 'width 0.3s ease',
+      height: '100vh',
+      position: 'sticky',
+      top: 0,
+      backgroundColor: '#f8f9fa',
+      borderRight: '1px solid #dee2e6',
+      overflowX: 'hidden'
+    }}>
+      {/* Sidebar Header */}
+      <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
+        {!collapsed && <h5 className="m-0 text-dark fw-bold">Dashboard</h5>}
+        <Button 
+          variant="light"
+          size="sm"
+          onClick={toggleSidebar}
+          aria-label="Toggle sidebar"
+          className={collapsed ? 'mx-auto' : ''}
+        >
+          <FaBars />
+        </Button>
+      </div>
 
-        {/* User profile section */}
-        {currentUser && (
-          <div className={`user-profile p-3 border-bottom ${collapsed ? 'text-center' : ''}`}>
-            <div className="d-flex align-items-center">
-              <div className={`avatar-circle ${collapsed ? 'mx-auto' : 'me-3'}`}>
-                {currentUser.name.charAt(0).toUpperCase()}
-              </div>
-              {!collapsed && (
-                <div className="user-info">
-                  <div className="user-name">{currentUser.name}</div>
-                  <div className="user-role text-muted">{userRole}</div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="sidebar-menu p-2">
-          <ul className="list-unstyled mb-0">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                <NavLink 
-                  to={item.to} 
-                  className={({ isActive }) => 
-                    `nav-link py-2 px-3 d-flex align-items-center ${isActive ? 'active bg-primary text-white rounded' : 'text-dark'}`
-                  }
-                >
-                  {item.icon}
-                  {!collapsed && <span>{item.text}</span>}
-                </NavLink>
-              </li>
-            ))}
-            
-            {/* Logout option always at the bottom */}
-            <li className="mt-auto">
-              <button 
-                className="nav-link py-2 px-3 d-flex align-items-center text-dark w-100 bg-transparent border-0"
-                onClick={handleLogout}
+      {/* User Profile Section */}
+      {currentUser && (
+        <div className={`p-3 border-bottom ${collapsed ? 'text-center' : ''}`}>
+          <div className="d-flex align-items-center">
+            {currentUser.photoURL ? (
+              <Image 
+                src={currentUser.photoURL} 
+                roundedCircle 
+                width={40} 
+                height={40}
+                className={collapsed ? 'mx-auto' : 'me-2'} 
+              />
+            ) : (
+              <div 
+                className={`rounded-circle bg-primary text-white d-flex align-items-center justify-content-center ${collapsed ? 'mx-auto' : 'me-2'}`}
+                style={{ width: '40px', height: '40px' }}
               >
-                <FaSignOutAlt className={collapsed ? "mx-auto" : "me-3"} />
-                {!collapsed && <span>Logout</span>}
-              </button>
-            </li>
-          </ul>
+                {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
+            
+            {!collapsed && (
+              <div>
+                <div className="fw-bold">{currentUser?.name || 'User'}</div>
+                <Badge bg="secondary">{userRole}</Badge>
+              </div>
+            )}
+          </div>
         </div>
-      </nav>
+      )}
+
+      {/* Navigation Links */}
+      <Nav className="flex-column mt-2">
+        {navItems.map((item, index) => (
+          <Nav.Item key={index}>
+            <NavLink 
+              to={item.to} 
+              className={({ isActive }) => 
+                `nav-link py-2 px-3 d-flex align-items-center ${isActive ? 'active text-primary fw-bold' : 'text-dark'}`
+              }
+            >
+              {item.icon}
+              {!collapsed && <span>{item.text}</span>}
+            </NavLink>
+          </Nav.Item>
+        ))}
+        
+        {/* Logout Button */}
+        <Nav.Item className="mt-auto">
+          <Button 
+            variant="link" 
+            className="nav-link py-2 px-3 d-flex align-items-center text-dark w-100"
+            onClick={handleLogout}
+          >
+            <FaSignOutAlt className={collapsed ? "mx-auto" : "me-2"} size={18} />
+            {!collapsed && <span>Logout</span>}
+          </Button>
+        </Nav.Item>
+      </Nav>
+      
+      {/* Add some custom CSS for proper styling */}
+      <style jsx>{`
+        .sidebar .nav-link.active {
+          background-color: #f0f0f0;
+          border-radius: 4px;
+        }
+        
+        .sidebar .nav-link:hover {
+          background-color: #e9ecef;
+          border-radius: 4px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+          justify-content: center;
+        }
+      `}</style>
     </div>
   );
 };

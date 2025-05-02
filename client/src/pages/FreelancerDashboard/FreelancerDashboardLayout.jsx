@@ -6,14 +6,19 @@ const FreelancerDashboardLayout = () => {
   const userRole = 'freelancer'; 
 
   return (
-    <div className="d-flex">
-      <SidebarUser role={userRole} />
-      
-      <div id="content" className="p-4">
-        {/* Your main content */}
-        <Outlet />
-      </div>
-    </div>
+    <Container fluid className="px-0">
+      <Row className="g-0">
+        <Col xs="auto">
+          <SidebarUser role={userRole} />
+        </Col>
+        
+        <Col className="content-area">
+          <Container fluid className="py-3">
+            <Outlet />
+          </Container>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 export default FreelancerDashboardLayout;

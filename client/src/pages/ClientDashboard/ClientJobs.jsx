@@ -2,9 +2,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { getJobsByClient, getProposalsForJob } from '../../services/apiRoutes';
-
-import { Container, Row, Col, Button, Accordion, Card, Badge, Pagination, Table } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { 
+  Row, 
+  Col, 
+  Button, 
+  Accordion, 
+  Card, 
+  Badge, 
+  Pagination, 
+  Table,
+  Spinner
+} from 'react-bootstrap';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -12,6 +20,7 @@ const ClientJobs = () => {
   const [openProjects, setOpenProjects] = useState([]);
   const [currentJobs, setCurrentJobs] = useState([]);
   const [completedJobs, setCompletedJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [openProjectPage, setOpenProjectPage] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -24,6 +33,7 @@ const ClientJobs = () => {
   }, []);
 
   const fetchClientJobs = async () => {
+    setLoading(true);
     try {
       const jobRes = await getJobsByClient();
       const allJobs = jobRes.data;
@@ -42,7 +52,7 @@ const ClientJobs = () => {
             title: job.title,
             createdAt: job.createdAt,
             acceptedTill: job.acceptedTill,
-            proposalCount: jobProposals.length, // Number of proposals
+            proposalCount: jobProposals.length,
           });
         } else if (job.status === 'inprogress') {
           ongoingJobs.push({
@@ -66,6 +76,8 @@ const ClientJobs = () => {
       setCompletedJobs(finishedJobs);
     } catch (err) {
       console.error('Error fetching client jobs:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,11 +113,21 @@ const ClientJobs = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
   return (
-    <Container className="my-5">
+    <>
       <Row className="mb-4">
         <Col className="d-flex justify-content-between align-items-center">
-          <h1>Jobs Dashboard</h1>
+          <h2>Jobs Dashboard</h2>
           <Button 
             variant="primary" 
             size="lg"
@@ -116,40 +138,59 @@ const ClientJobs = () => {
         </Col>
       </Row>
 
-      <Accordion defaultActiveKey="0" className="mb-5">
+      <Accordion defaultActiveKey="0" className="mb-4">
         {/* Open Projects Section */}
         <Accordion.Item eventKey="0">
           <Accordion.Header>
-            <h3 className="mb-0">Open Projects</h3>
+            <h5 className="mb-0 fw-bold">Open Projects</h5>
           </Accordion.Header>
-          <Accordion.Body>
-            <Table responsive hover>
-              <thead>
-                <tr>
-                  <th>Job Title</th>
-                  <th>Date Posted</th>
-                  <th>Expiring On</th>
-                  <th>Proposals</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginate(openProjects, openProjectPage).map((job, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <Link to={`/jobs/${job.jobId}`}>{job.title}</Link>
-                    </td>
-                    <td>{new Date(job.createdAt).toLocaleDateString()}</td>
-                    <td>{new Date(job.acceptedTill).toLocaleDateString()}</td>
-                    <td>{job.proposalCount}</td>
-                  </tr>
-                ))}
-                {openProjects.length === 0 && (
+          <Accordion.Body className="p-0">
+            <div className="table-responsive">
+              <Table hover className="mb-0">
+                <thead className="table-light">
                   <tr>
-                    <td colSpan="4" className="text-center py-3">No open projects</td>
+                    <th>Job Title</th>
+                    <th>Date Posted</th>
+                    <th>Expiring On</th>
+                    <th>Proposals</th>
+                    <th>Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </Table>
+                </thead>
+                <tbody>
+                  {paginate(openProjects, openProjectPage).map((job, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <Link to={`/jobs/${job.jobId}`} className="text-decoration-none fw-medium">{job.title}</Link>
+                      </td>
+                      <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                      <td>{new Date(job.acceptedTill).toLocaleDateString()}</td>
+                      <td>
+                        <Badge bg="info" pill>{job.proposalCount}</Badge>
+                      </td>
+                      <td>
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm" 
+                          onClick={() => navigate(`/jobs/${job.jobId}`)}
+                        >
+                          View
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {openProjects.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="text-center py-4">
+                        No open projects. Ready to start a new project?{' '}
+                        <Button variant="link" onClick={() => navigate('/client/post-job')} className="p-0">
+                          Post a job now
+                        </Button>.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
             {renderPagination(openProjects, openProjectPage, setOpenProjectPage)}
           </Accordion.Body>
         </Accordion.Item>
@@ -157,28 +198,39 @@ const ClientJobs = () => {
         {/* Current Jobs Section */}
         <Accordion.Item eventKey="1">
           <Accordion.Header>
-            <h3 className="mb-0">Current Jobs</h3>
+            <h5 className="mb-0 fw-bold">Current Jobs</h5>
           </Accordion.Header>
           <Accordion.Body>
             <Row>
               {paginate(currentJobs, currentPage).map((job, idx) => (
-                <Col key={idx} md={6} className="mb-3">
-                  <Card>
+                <Col key={idx} lg={6} className="mb-3">
+                  <Card className="h-100 shadow-sm">
                     <Card.Body>
                       <Card.Title>
-                        <Link to={`/job-area/${job.jobId}`}>{job.title}</Link>
+                        <Link to={`/job-area/${job.jobId}`} className="text-decoration-none">{job.title}</Link>
                       </Card.Title>
                       <Card.Text>
                         <strong>Start Date:</strong> {new Date(job.startDate).toLocaleDateString()}<br />
                         <strong>Expected Completion:</strong> {job.endDate !== 'TBD' ? new Date(job.endDate).toLocaleDateString() : 'TBD'}
                       </Card.Text>
-                      <Badge bg="primary">In Progress</Badge>
+                      <div className="d-flex justify-content-between align-items-center mt-3">
+                        <Badge bg="primary" pill>In Progress</Badge>
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm"
+                          onClick={() => navigate(`/job-area/${job.jobId}`)}
+                        >
+                          Go to Workspace
+                        </Button>
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>
               ))}
               {currentJobs.length === 0 && (
-                <Col className="text-center py-3">No current jobs available</Col>
+                <Col className="text-center py-4">
+                  <p className="text-muted mb-0">No jobs in progress. Active jobs will appear here.</p>
+                </Col>
               )}
             </Row>
             {renderPagination(currentJobs, currentPage, setCurrentPage)}
@@ -188,34 +240,45 @@ const ClientJobs = () => {
         {/* Completed Jobs Section */}
         <Accordion.Item eventKey="2">
           <Accordion.Header>
-            <h3 className="mb-0">Completed Jobs</h3>
+            <h5 className="mb-0 fw-bold">Completed Jobs</h5>
           </Accordion.Header>
           <Accordion.Body>
             <Row>
               {paginate(completedJobs, completedPage).map((job, idx) => (
-                <Col key={idx} md={6} className="mb-3">
-                  <Card>
+                <Col key={idx} lg={6} className="mb-3">
+                  <Card className="h-100 shadow-sm">
                     <Card.Body>
                       <Card.Title>{job.title}</Card.Title>
                       <Card.Text>
                         <strong>Started:</strong> {new Date(job.startDate).toLocaleDateString()}<br />
                         <strong>Completed:</strong> {job.endDate !== 'TBD' ? new Date(job.endDate).toLocaleDateString() : 'TBD'}<br />
-                        <strong>Amount:</strong> ${job.amount}
+                        <strong>Final Amount:</strong> ${job.amount !== 'N/A' ? job.amount : '0.00'}
                       </Card.Text>
-                      <Badge bg="success">Completed</Badge>
+                      <div className="d-flex justify-content-between align-items-center mt-3">
+                        <Badge bg="success" pill>Completed</Badge>
+                        <Button 
+                          variant="outline-secondary" 
+                          size="sm"
+                          onClick={() => navigate(`/job-history/${job.jobId}`)}
+                        >
+                          View History
+                        </Button>
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>
               ))}
               {completedJobs.length === 0 && (
-                <Col className="text-center py-3">No completed jobs available</Col>
+                <Col className="text-center py-4">
+                  <p className="text-muted mb-0">No completed jobs yet. Jobs will appear here once they're finished.</p>
+                </Col>
               )}
             </Row>
             {renderPagination(completedJobs, completedPage, setCompletedPage)}
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>
-    </Container>
+    </>
   );
 };
 
