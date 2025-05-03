@@ -30,8 +30,11 @@ console.log('CLIENT_URL:', process.env.CLIENT_URL);
 
 
 // Middleware
-const allowedOrigins = [process.env.CLIENT_URL];
-
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://gig-space-jobs.vercel.app',
+  'https://gig-space.onrender.com',
+];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
