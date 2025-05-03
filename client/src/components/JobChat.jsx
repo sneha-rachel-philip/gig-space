@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5000'); // make sure this matches your backend
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  withCredentials: true,
+});
 
 const JobChat = ({ jobId, user }) => {
   const [messages, setMessages] = useState([]);
