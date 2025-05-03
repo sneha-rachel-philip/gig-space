@@ -30,14 +30,14 @@ console.log('CLIENT_URL:', process.env.CLIENT_URL);
 
 
 // Middleware
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://gig-space-jobs.vercel.app',
-  'https://gig-space.onrender.com',
-];
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (
+      !origin ||
+      origin === 'http://localhost:5173' ||
+      origin === 'https://gig-space-jobs.vercel.app' ||
+      /^https:\/\/gig-space-jobs.*\.vercel\.app$/.test(origin)
+    ) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
@@ -46,8 +46,17 @@ app.use(cors({
   credentials: true,
 }));
 
+
 app.use(express.json()); // Parse JSON bodies
+
+
+
+
+
 app.use('/uploads', express.static('uploads'));
+
+
+
 
 // Routes
 app.use('/api/client', clientRoutes);
@@ -80,7 +89,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        origin === 'http://localhost:5173' ||
+        origin === 'https://gig-space-jobs.vercel.app' ||
+        /^https:\/\/gig-space-jobs.*\.vercel\.app$/.test(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS (Socket.io)"));
@@ -88,7 +102,8 @@ const io = new Server(server, {
     },
     methods: ['GET', 'POST'],
     credentials: true,
-  },
+  }
+  
 });
 
 
