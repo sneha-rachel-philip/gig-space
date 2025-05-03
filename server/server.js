@@ -26,11 +26,15 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+console.log('CLIENT_URL:', process.env.CLIENT_URL);
+
+
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL,  
   credentials: true,
-}));app.use(express.json()); // Parse JSON bodies
+}));
+app.use(express.json()); // Parse JSON bodies
 app.use('/uploads', express.static('uploads'));
 
 // Routes
