@@ -26,6 +26,9 @@ import Message from './models/message.model.js';
 const app = express();
 const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
 
+app.use('/api/stripe', express.raw({ type: 'application/json' }), paymentRoutes);
+
+
 // Connect to MongoDB
 connectDB();
 

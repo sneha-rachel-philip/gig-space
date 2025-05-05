@@ -25,7 +25,7 @@ router.post('/withdraw', authenticate, requestWithdrawal);
 
 
 // POST /api/payments/webhook - Stripe webhook for payment status updates
-router.post('/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
+router.post('/webhook', paymentWebhook);
 
 
 
