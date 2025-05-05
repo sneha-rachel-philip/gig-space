@@ -74,3 +74,16 @@ export const getUserChats = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch chats' });
   }
 };
+
+
+export const getJobMessages = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    // Changed from receiver to jobId to match the schema
+    const messages = await Message.find({ jobId }).sort({ createdAt: 1 });
+    res.json(messages);
+  } catch (err) {
+    console.error('❌ Failed to get job messages:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

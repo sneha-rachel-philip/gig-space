@@ -7,9 +7,13 @@ const messageSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    receiver: {
+    sender_name: {
+      type: String,
+      required: true
+    },
+    jobId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Job',
       required: true,
     },
     content: {

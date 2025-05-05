@@ -16,7 +16,9 @@ import messageRoutes from './routes/message.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import clientRoutes from './routes/client.routes.js'; 
-import freelancerRoutes from './routes/freelancer.routes.js'; // Import freelancer routes
+import freelancerRoutes from './routes/freelancer.routes.js'; 
+
+import Message from './models/message.model.js';
 
 
 
@@ -27,7 +29,6 @@ const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
 // Connect to MongoDB
 connectDB();
 
-console.log('CLIENT_URL:', process.env.CLIENT_URL);
 
 
 // Middleware
@@ -73,11 +74,6 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) =
 });
 
 app.use(express.json()); // Parse JSON bodies
-
-
-
-
-
 app.use('/uploads', express.static('uploads'));
 
 
@@ -132,15 +128,59 @@ const io = new Server(server, {
 });
 
 
+// Socket implementation
 io.on('connection', (socket) => {
   console.log('✅ Socket connected:', socket.id);
 
   socket.on('joinRoom', (jobId) => {
     socket.join(jobId);
+    console.log(`User ${socket.id} joined room: ${jobId}`);
   });
 
-  socket.on('sendMessage', (msg) => {
-    io.to(msg.jobId).emit('receiveMessage', msg);
+  socket.on('leaveRoom', (jobId) => {
+    socket.leave(jobId);
+    console.log(`User ${socket.id} left room: ${jobId}`);
+  });
+
+  socket.on('sendMessage', async (msg) => {
+    try {
+      // Create message document with consistent field names
+      const saved = new Message({
+        sender: msg.sender,
+        sender_name: msg.name, // Store sender name
+        jobId: msg.jobId,
+        content: msg.content, // Now matches the frontend field
+        time: msg.time,
+        read: false,
+      });
+      await saved.save();
+      
+      // Convert to format expected by frontend
+      const messageToSend = {
+        _id: saved._id,
+        sender: saved.sender,
+        name: msg.name,
+        content: saved.content,
+        jobId: saved.jobId,
+        time: saved.time,
+        read: saved.read
+      };
+      
+      io.to(msg.jobId).emit('receiveMessage', messageToSend);
+    } catch (err) {
+      console.error('❌ Failed to save message:', err);
+      socket.emit('messageError', {
+        error: 'Failed to send message',
+        originalMessage: msg,
+      });
+    }
+  });
+
+  socket.on('typing', (data) => {
+    socket.to(data.jobId).emit('userTyping', {
+      user: data.user,
+      isTyping: data.isTyping
+    });
   });
 
   socket.on('disconnect', () => {
@@ -149,12 +189,9 @@ io.on('connection', (socket) => {
 });
 
 
-
 // Start server
 const PORT = process.env.PORT || 5000;
-/* app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-}); */
+
 
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

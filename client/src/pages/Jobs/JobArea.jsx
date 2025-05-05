@@ -153,9 +153,8 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
 
   const isClient = user?.role === 'client';
   const isFreelancer = contract?.freelancer?._id === user?._id;
+  
 //  const getPaidMilestoneLabels = contract?.milestonePayments?.filter(m => m.paidAt).map(m => m.label) || [];
-
-
 
   return (
     <div className="container py-4">
@@ -471,7 +470,7 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
           <h2 className="h4 mb-0"><i className="bi bi-chat-dots me-2"></i>Messages</h2>
         </div>
         <div className="card-body">
-          <JobChat jobId={jobId} user={user} />
+          <JobChat jobId={jobId} user={user}/>
         </div>
       </div>
     </div>

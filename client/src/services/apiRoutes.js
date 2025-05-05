@@ -42,9 +42,10 @@ export const markMilestoneAsDone = (contractId, label) => axiosInstance.post(`/c
   
 
 // Message routes
-export const sendMessage = (data) => axiosInstance.post('/message/send', data);
-export const getConversation = (userId) => axiosInstance.get(`/message/conversation/${userId}`);
-export const getUserChats = () => axiosInstance.get('/message/chats');
+export const sendMessage = (data) => axiosInstance.post('/messages/send', data);
+export const getConversation = (userId) => axiosInstance.get(`/message/conversations/${userId}`);
+export const getUserChats = () => axiosInstance.get('/messages/chats');
+export const getJobMessages = (jobId) =>axiosInstance.get(`/messages/${jobId}`);
 
 // Payment routes
 export const createPayment = (data) => axiosInstance.post('/payments', data);
