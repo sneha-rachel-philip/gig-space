@@ -17,7 +17,7 @@ import reviewRoutes from './routes/review.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import clientRoutes from './routes/client.routes.js'; 
 import freelancerRoutes from './routes/freelancer.routes.js'; 
-
+import { paymentWebhook } from './controllers/payment.controller.js'; // Make sure this is exported
 import Message from './models/message.model.js';
 
 
@@ -25,9 +25,6 @@ import Message from './models/message.model.js';
 
 const app = express();
 const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
-
-app.use('/api/stripe', express.raw({ type: 'application/json' }), paymentRoutes);
-
 
 // Connect to MongoDB
 connectDB();
@@ -51,36 +48,18 @@ app.use(cors({
   credentials: true,
 }));
 
-app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripeInstance.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('⚠️ Webhook signature verification failed.', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle the event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    console.log('✅ Payment successful for session:', session.id);
-    // TODO: Handle successful payment (e.g., update DB)
-  }
-
-  res.status(200).json({ received: true });
-});
-
 app.use(express.json()); // Parse JSON bodies
+
+
+app.post('/api/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
+
+
+
+
 app.use('/uploads', express.static('uploads'));
 
 
-
+app.use('/api/stripe', paymentRoutes);
 
 // Routes
 app.use('/api/client', clientRoutes);
