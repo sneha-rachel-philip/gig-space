@@ -171,53 +171,54 @@ export const verifyStripeSuccess = async (req, res) => {
     const { sessionId } = req.body;
     if (!sessionId) return res.status(400).json({ error: "Missing session ID" });
 
-    console.log("Verifying session ID:", sessionId);
-
     const session = await stripeClient.checkout.sessions.retrieve(sessionId);
+
     const metadata = session.metadata;
+    if (!metadata) return res.status(400).json({ error: "Missing metadata in session" });
 
     const contract = await Contract.findById(metadata.contractId);
-    if (!contract) return res.status(404).json({ error: 'Contract not found' });
+    if (!contract) return res.status(404).json({ error: "Contract not found" });
 
-    // Already paid?
     let payment = await Payment.findOne({ stripeSessionId: sessionId });
-    if (payment) {
-      return res.json({ success: true, jobId: contract.job });
+
+    if (!payment) {
+      // fallback for development (webhook might not run)
+      payment = new Payment({
+        contract: metadata.contractId,
+        payer: metadata.payerId,
+        receiver: metadata.receiverId,
+        amount: session.amount_total / 100,
+        stripeSessionId: sessionId,
+        milestoneLabel: metadata.milestoneLabel,
+        status: "completed",
+      });
+      await payment.save();
+
+      await User.findByIdAndUpdate(
+        metadata.receiverId,
+        { $inc: { walletBalance: session.amount_total / 100 } }
+      );
+
+      const milestone = contract.milestonePayments.find(
+        (m) => m.label.trim().toLowerCase() === metadata.milestoneLabel.trim().toLowerCase()
+      );
+
+      if (milestone && !milestone.paidAt) {
+        milestone.paidAt = new Date();
+        milestone.paymentId = payment._id;
+        await contract.save();
+      }
+
+      console.log("✅ Created fallback payment record in dev");
     }
 
-    // Create new payment record
-    payment = new Payment({
-      contract: metadata.contractId,
-      payer: metadata.payerId,
-      receiver: metadata.receiverId,
-      amount: session.amount_total / 100,
-      stripeSessionId: sessionId,
-      milestoneLabel: metadata.milestoneLabel,
-      status: "completed",
-    });
-    await payment.save();
-    await User.findByIdAndUpdate(
-      metadata.receiverId,
-      { $inc: { walletBalance: session.amount_total / 100 } }
-    );
-
-    // ✅ Update matching milestone
-    const milestone = contract.milestonePayments.find(
-      (m) => m.label.trim().toLowerCase() === metadata.milestoneLabel.trim().toLowerCase()
-    );
-
-    if (milestone && !milestone.paidAt) {
-      milestone.paidAt = new Date();
-      milestone.paymentId = payment._id;
-      await contract.save();
-    }
-
-    res.json({ success: true, jobId: contract.job });
+    return res.json({ success: true, jobId: contract.job });
   } catch (err) {
     console.error("Error verifying Stripe payment:", err);
-    res.status(500).json({ error: "Payment verification failed" });
+    return res.status(500).json({ error: "Payment verification failed" });
   }
 };
+
 
 
 //used
