@@ -58,14 +58,17 @@ export const getContractByJobId = async (req, res) => {
       .populate('freelancer', 'name email');
 
     if (!contract) {
+      // Returning 404 if the contract doesn't exist for the given job
       return res.status(404).json({ error: 'Contract not found' });
     }
 
     res.status(200).json(contract);
   } catch (err) {
+    // If there's an error while fetching, respond with a 500 error
     res.status(500).json({ error: 'Error fetching contract' });
   }
 };
+
 
 
 /* // Get all contracts for a specific freelancer

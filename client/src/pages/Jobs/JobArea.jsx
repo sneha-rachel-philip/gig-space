@@ -5,13 +5,15 @@ import { getJobById,
           getContractByJobId,
           updateContractStatus,
           markMilestoneAsDone,
-          updateJobStatus
+          updateJobStatus,
+          getReviewsForJob,
     } from '../../services/apiRoutes';
 import { useAuth } from '../../context/AuthContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import FileUploadSection from '../../components/FileUploadSection';
 import JobChat from '../../components/JobChat';
+import ReviewForm from '../../components/ReviewForm';
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +25,9 @@ const JobArea = () => {
   const [loading, setLoading] = useState(true);
   const [contract, setContract] = useState(null);
   const [contractStatus, setContractStatus] = useState(null);
+  const [userReviews, setUserReviews] = useState([]); 
+  const [canReview, setCanReview] = useState(false); 
+  const [showReviewForm, setShowReviewForm] = useState(false);
   const getPaidMilestoneLabels = contract?.milestonePayments.filter(m => m.paidAt).map(m => m.label) || [];
   const allMilestonesPaid = contract?.milestonePayments?.every(m => m.paidAt);
 
@@ -40,12 +45,26 @@ const JobArea = () => {
       const contractRes = await getContractByJobId(jobId);
       setContract(contractRes.data);
       setContractStatus(contractRes.data.status);
+      try {
+        const reviewsRes = await getReviewsForJob(jobId);
+        const reviewsData = reviewsRes.data;
+        setUserReviews(reviewsData.reviews || []);
+        
+        // Check if current user has already left a review
+        const hasReviewed = reviewsData.reviews?.some(review => review.reviewerId === user?._id);
+        setCanReview(!hasReviewed);
+      } catch (err) {
+        console.error('Error fetching reviews:', err);
+        setCanReview(true); // Allow review if we can't determine if user has already reviewed
+      }
+
+
     } catch (err) {
       console.error('Error fetching job or contract:', err);
     } finally {
       setLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, user?._id]);
   
   useEffect(() => {
     fetchData();
@@ -165,15 +184,23 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
           <div className="badge bg-secondary mb-2">{job.status}</div>
           <p className="lead">{job.description}</p>
           <div className="d-flex text-muted mb-3">
-            <div className="me-3">
+          <div className="me-3">
               <i className="bi bi-person-fill"></i> 
-              Client:   <Link to={`/user/${job?.client?.id}/profile`}>{job?.client?.name || '—'}
+              Client: 
+              <Link to={`/user/${job?.client?._id}/profile`}>
+                {job?.client?.name || '—'}
               </Link>
-              </div>
-            <div><i className="bi bi-person-circle"></i> 
-            Freelancer:   <Link to={`/user/${job?.assignedFreelancer?.id}/profile`}>{job?.assignedFreelancer?.name || '—'}
+            </div>
+
+            <div>
+              <i className="bi bi-person-circle"></i> 
+              Freelancer: 
+              <Link to={`/user/${job?.assignedFreelancer?._id}/profile`}>
+                {job?.assignedFreelancer?.name || '—'}
               </Link>
-              </div>
+            </div>
+
+
           </div>
         </div>
       </div>
@@ -449,6 +476,72 @@ console.log('Paid Milestones Labels:', getPaidMilestoneLabels); */
               </div>
             </div>
           </div>
+
+          {/* Add Reviews Card when job is closed */}
+          {job?.status === 'closed' && (
+            <div className="card shadow-sm mb-4">
+              <div className="card-header bg-light">
+                <h2 className="h4 mb-0"><i className="bi bi-star me-2"></i>Reviews</h2>
+              </div>
+              <div className="card-body">
+                {userReviews.length > 0 ? (
+                  <div className="mb-3">
+                    <h5>Project Reviews</h5>
+                    {userReviews.map(review => (
+                      <div key={review._id} className="border-bottom pb-2 mb-2">
+                        <div className="d-flex justify-content-between">
+                          <div>
+                            <span className="fw-bold">{review.reviewerName}</span>
+                            <div className="text-warning">
+                              {Array(5).fill().map((_, i) => (
+                                <i key={i} className={`bi ${i < review.rating ? 'bi-star-fill' : 'bi-star'}`}></i>
+                              ))}
+                            </div>
+                          </div>
+                          <small className="text-muted">{new Date(review.createdAt).toLocaleDateString()}</small>
+                        </div>
+                        <p className="text-muted mt-1">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : job.status === 'closed' ? (
+                  <p className="text-muted">No reviews yet for this project.</p>
+                ) : null}
+                
+                {/* Review Form */}
+                {canReview && job.status === 'closed' && (
+                  <div>
+                    {!showReviewForm ? (
+                      <button 
+                        className="btn btn-outline-primary w-100"
+                        onClick={() => setShowReviewForm(true)}
+                      >
+                        Leave a Review
+                      </button>
+                    ) : (
+                      <div className="mt-3">
+                        <h5>Leave Your Review</h5>
+                        <ReviewForm 
+                          jobId={jobId} 
+                          setUserReviews={setUserReviews} 
+                          setCanReview={setCanReview} 
+                        />
+                        <button 
+                          className="btn btn-link text-muted mt-2"
+                          onClick={() => setShowReviewForm(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+
+          {/* Close Job Button */}
           {isClient && allMilestonesPaid && (
             job?.status !== 'closed' ? (
               <button className="btn btn-danger" onClick={handleCloseJob}>

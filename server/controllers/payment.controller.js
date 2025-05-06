@@ -81,6 +81,12 @@ export const getPaymentsForUser = async (req, res) => {
 
 // Handle payment webhook (optional, for Stripe events)
 export const paymentWebhook = async (req, res) => {
+
+/*   if (process.env.NODE_ENV === 'production') {
+    console.log("Skipping webhook processing in production...");
+    return res.status(200).send();  // Skip webhook processing
+  } */
+
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   console.log('Received webhook event:', req.body);

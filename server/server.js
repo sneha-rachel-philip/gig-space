@@ -48,11 +48,11 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json()); // Parse JSON bodies
-
 
 app.post('/api/webhook', express.raw({ type: 'application/json' }), paymentWebhook);
 
+
+app.use(express.json()); // Parse JSON bodies
 
 
 

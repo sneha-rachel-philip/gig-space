@@ -32,7 +32,6 @@ const JobDetails = () => {
   const [proposals, setProposals] = useState([]);
   const [jobStatus, setJobStatus] = useState('');
   const [proposalAccepted, setProposalAccepted] = useState(false);
-  const [showContractForm, setShowContractForm] = useState(false);
   const [milestoneAmounts, setMilestoneAmounts] = useState([]);
   const [milestoneDates, setMilestoneDates] = useState([]);
   const [contractBudget, setContractBudget] = useState('');
@@ -47,14 +46,17 @@ const JobDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch job data
         const jobRes = await getJobById(id);
         setJob(jobRes.data);
         setJobStatus(jobRes.data.status);
-        setClientData(jobRes.data.client); // Assuming client data is included in the job response
-
+        setClientData(jobRes.data.client); 
+  
         try {
+          // Fetch contract data
           const contractRes = await getContractByJobId(id);
           const contract = contractRes.data;
+  
           if (contract?.status === 'none') {
             setContractStatus('pending');
           } else if (contract?.status === 'pending') {
@@ -62,35 +64,44 @@ const JobDetails = () => {
           } else {
             setContractStatus('none');
           }
-        } catch {
-          console.warn('No contract found for this job yet');
-          setContractStatus('none');
+        } catch (error) {
+          // Handle the case where no contract is found (404)
+          if (error.response && error.response.status === 404) {
+            console.warn('No contract found for this job yet');
+            setContractStatus('none');
+          } else {
+            console.error('Error fetching contract:', error);
+          }
         }
-      } catch (error) {
-        console.error('Error fetching job or contract:', error);
-      }
-
-      try {
+  
+        // Fetch current user data
         const userRes = await getCurrentUser();
         setUserRole(userRes.data.role);
-      } catch {
-        console.warn('No logged in user, treating as guest');
-        setUserRole('guest');
+      } catch (error) {
+        console.error('Error fetching job or user data:', error);
       } finally {
         setLoadingUser(false);
       }
-
+  
       try {
-        const proposalsRes = await getProposalsForJob(id);
-        setProposals(proposalsRes.data);
+          // Fetch proposals for the job
+          const proposalsRes = await getProposalsForJob(id);
+          const allProposals = proposalsRes.data;
+          setProposals(allProposals);
+
+          // Automatically select the accepted proposal if any
+          const accepted = allProposals.find(p => p.status === 'accepted');
+          if (accepted) {
+            setSelectedProposal(accepted);
+          }
       } catch (error) {
         console.error('Error fetching proposals:', error);
       }
     };
-
+  
     fetchData();
   }, [id]);
-
+  
   const handleAcceptProposal = async (proposalId) => {
     const confirm = window.confirm("Are you sure you want to accept this proposal?");
     if (!confirm) return;
@@ -102,7 +113,6 @@ const JobDetails = () => {
         const { proposal, job } = res.data;
         setSelectedProposal(proposal);
         setJob(job);
-        setShowContractForm(true);
   
         const refreshed = await getProposalsForJob(job._id);
         setProposals(refreshed.data);
@@ -152,7 +162,6 @@ const JobDetails = () => {
 
       if (response.status === 201) {
         alert('Contract created successfully!');
-        setShowContractForm(false);
         setContractStatus('created');
       }
     } catch (err) {
@@ -253,7 +262,7 @@ const JobDetails = () => {
                   <div className="mb-0">
                   <FaUser className="me-2 text-secondary" />
                   <span>Client: </span>
-                  <Link to={`/user/${clientData.id}/profile`} className="text-decoration-none">
+                  <Link to={`/user/${clientData._id}/profile`} className="text-decoration-none">
                     {clientData.name || "Client Name"}
                   </Link>
                 </div>
@@ -305,7 +314,7 @@ const JobDetails = () => {
                     <Nav.Link eventKey="submitProposal" className="px-4">Submit Proposal</Nav.Link>
                   </Nav.Item>
                 )}
-                {proposalAccepted && showContractForm && (
+                {proposalAccepted && selectedProposal && (
                   <Nav.Item>
                     <Nav.Link eventKey="contract" className="px-4">Contract</Nav.Link>
                   </Nav.Item>
@@ -535,7 +544,7 @@ const JobDetails = () => {
 
                 {/* Contract Tab */}
                 <Tab.Pane eventKey="contract">
-                  {contractStatus === 'none' && showContractForm && (
+                {contractStatus === 'none' && selectedProposal && (
                     <Card className="border-0">
                       <Card.Body>
                         <h5 className="mb-4">Create Contract</h5>

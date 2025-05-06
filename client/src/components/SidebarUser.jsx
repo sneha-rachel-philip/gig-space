@@ -54,12 +54,22 @@ const SidebarUser = ({ role }) => {
         {
           to: '/admin/users',
           icon: <FaUserCircle className={collapsed ? "mx-auto" : "me-2"} size={18} />,
-          text: 'Manage Users'
+          text: 'User Management'
         },
         {
-          to: '/admin/settings',
-          icon: <FaCog className={collapsed ? "mx-auto" : "me-2"} size={18} />,
-          text: 'Settings'
+          to: '/admin/jobs',
+          icon: <FaBriefcase className={collapsed ? "mx-auto" : "me-2"} size={18} />,
+          text: 'Job Management'
+        },
+        {
+          to: '/admin/reviews',
+          icon: <FaEnvelope className={collapsed ? "mx-auto" : "me-2"} size={18} />,
+          text: 'Review Moderation'
+        },
+        {
+          to: '/admin/payments',
+          icon: <FaMoneyBill className={collapsed ? "mx-auto" : "me-2"} size={18} />,
+          text: 'Payments'
         }
       ];
     }

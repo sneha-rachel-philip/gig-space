@@ -66,6 +66,7 @@ export const getProposalById = (proposalId) => axiosInstance.get(`/proposal/id/$
 // Review routes
 export const addReview = (data) => axiosInstance.post('/reviews', data);
 export const getReviewsForUser = (userId) => axiosInstance.get(`/reviews/${userId}`);
+export const getReviewsForJob = (jobId) => axiosInstance.get(`/reviews/job/${jobId}`);
 
 // User routes
 export const getCurrentUser = () => axiosInstance.get('/users/me');

@@ -4,7 +4,8 @@ import axios from 'axios';
 import { Accordion, Card, Button, Form, Badge, Row, Col, Spinner } from 'react-bootstrap';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import { useAuth } from '../context/AuthContext';
-import { getCurrentUser, getUserById, updateUser } from '../services/apiRoutes';
+import { getCurrentUser, getUserById, updateUser, getReviewsForUser } from '../services/apiRoutes';
+import UserReviewList from '../components/UserReviewList';
 
 function ProfilePage() {
   const { userId } = useParams();
@@ -37,8 +38,10 @@ function ProfilePage() {
         const fetchId = userId || profileData._id;
         if (fetchId) {
           try {
-            const reviewsRes = await axios.get(`/api/reviews/${fetchId}`);
+            const reviewsRes = await getReviewsForUser(fetchId);
             setReviews(reviewsRes.data);
+            console.log(reviewsRes.data);  // Check the response data structure
+
           } catch (err) {
             console.error('Error fetching reviews', err);
           }
@@ -355,7 +358,7 @@ function ProfilePage() {
                                 {review.reviewer?.name || 'Anonymous'}
                               </h6>
                               <small className="text-muted">
-                                Project: {review.contract?.title || 'Not specified'}
+                                Project: {review.job?.title || 'Not specified'}
                               </small>
                             </div>
                             <Badge bg={getRatingBadgeColor(review.rating)}>

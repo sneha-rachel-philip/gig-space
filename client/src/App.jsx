@@ -40,6 +40,14 @@ import FreelancerJobs from './pages/FreelancerDashboard/FreelancerJobs';
 import FreelancerPayments from './pages/FreelancerDashboard/FreelancerPayments';
 import FreelancerMessages from './pages/FreelancerDashboard/FreelancerMessages';
 
+// Admin Dashboard
+import AdminDashboardLayout from './pages/AdminDashboard/AdminDashboardLayout';
+import JobManagement from './pages/AdminDashboard/JobManagement';
+import UserManagement from './pages/AdminDashboard/UserManagement';
+import ReviewModeration from './pages/AdminDashboard/ReviewModeration';
+import PaymentTracking from './pages/AdminDashboard/PaymentTracking';
+import AdminHome from './pages/AdminDashboard/AdminHome';
+
 function App() {
   return (
     <AuthProvider>
@@ -121,6 +129,21 @@ function App() {
 
       
           </Route>    
+
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute allowedRoles={['admin']}>
+                <AdminDashboardLayout />
+              </PrivateRoute>
+            }
+          >
+            <Route path="home" element={<AdminHome />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="jobs" element={<JobManagement />} />
+            <Route path="reviews" element={<ReviewModeration />} />
+            <Route path="payments" element={<PaymentTracking />} />
+          </Route>
 
         </Routes>
       </Router>

@@ -13,9 +13,9 @@ const reviewSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    contract: {
+    job: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Contract',
+      ref: 'Job',
       required: true,
     },
     rating: {
