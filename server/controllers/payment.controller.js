@@ -125,6 +125,33 @@ export const paymentWebhook = async (req, res) => {
         console.log('✅ Milestone marked as paid:', milestone.label);
       }
 
+            // Create payment record if not exists
+            const existing = await Payment.findOne({ stripeSessionId: session.id });
+            if (!existing) {
+              const amount = session.amount_total / 100;
+              const payment = new Payment({
+                contract: contractId,
+                payer: payerId,
+                receiver: receiverId,
+                amount,
+                stripeSessionId: session.id,
+                milestoneLabel,
+                status: 'completed',
+              });
+      
+              await payment.save();
+      
+              // Credit the receiver
+              await User.findByIdAndUpdate(receiverId, {
+                $inc: { walletBalance: amount },
+              });
+      
+              console.log('✅ Payment recorded and wallet updated');
+            } else {
+              console.log('ℹ️ Payment already exists for this session');
+            }
+      
+
       break;
     }
 
