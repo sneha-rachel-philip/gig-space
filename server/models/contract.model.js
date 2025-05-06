@@ -10,7 +10,7 @@ const contractSchema = new mongoose.Schema(
         label: String,
         amount: Number,
         paidAt: { type: Date, default: null },
-        paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
+        paymentId: String,
         completedByFreelancer: { type: Boolean, default: false }, 
         completedAt: Date                                           
       }
