@@ -10,6 +10,9 @@ const PaymentSuccess = () => {
   const location = useLocation();
   const [status, setStatus] = useState("verifying");
 
+    // Dynamically get the API base URL from the environment variable
+    const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     const verifyPayment = async () => {
         try {
@@ -19,7 +22,7 @@ const PaymentSuccess = () => {
             return;
           }
   
-          const res = await axios.post('api/payments/verify-success', { sessionId });
+          const res = await axios.post(`${API_BASE}/payments/verify-success`, { sessionId });
 
     
           if (res.data.success) {
