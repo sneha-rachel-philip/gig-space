@@ -59,7 +59,7 @@ app.use(express.json()); // Parse JSON bodies
 app.use('/uploads', express.static('uploads'));
 
 
-app.use('/api/stripe', paymentRoutes);
+// app.use('/api/stripe', paymentRoutes);
 
 // Routes
 app.use('/api/client', clientRoutes);
