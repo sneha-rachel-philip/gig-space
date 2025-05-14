@@ -4,6 +4,8 @@ import {
   getContractByJobId,
   updateContractStatus,
   markMilestoneAsDone,
+  approveMilestone,
+  getPendingMilestoneApprovals
 } from '../controllers/contract.controller.js';
 
 import { authenticate } from '../middlewares/authMiddleware.js';
@@ -18,5 +20,9 @@ router.get('/client', authenticate, getContractsForClient); // Client can view t
 router.put('/update', authenticate, updateContractStatus); // Client can update contract status
 router.get('/by-job/:jobId', getContractByJobId);
 router.post('/:contractId/milestone/mark-done', authenticate, authorizeRoles('freelancer'), markMilestoneAsDone);
+// PATCH /api/contracts/:contractId/milestones/:milestoneLabel/approve
+router.patch('/:contractId/milestones/:milestoneLabel/approve', authenticate, authorizeRoles('admin'),approveMilestone);
+
+router.get('/pending-approvals', authenticate, authorizeRoles('admin'), getPendingMilestoneApprovals);
 
 export default router;

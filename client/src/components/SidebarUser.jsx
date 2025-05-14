@@ -183,7 +183,7 @@ const SidebarUser = ({ role }) => {
       </Nav>
       
       {/* Add some custom CSS for proper styling */}
-      <style jsx>{`
+      <style>{`
         .sidebar .nav-link.active {
           background-color: #f0f0f0;
           border-radius: 4px;

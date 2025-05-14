@@ -74,7 +74,11 @@ const userSchema = new mongoose.Schema(
       default: ''
     },
 
-    // Ratings + Reviews (optional, but useful!)
+    status: {
+      type: String,
+      enum: ['active', 'banned'],
+      default: 'active',
+    },
     averageRating: {
       type: Number,
       default: 0,

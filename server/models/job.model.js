@@ -71,6 +71,24 @@ const jobSchema = new mongoose.Schema(
       },
     },
   ],
+
+  flags: [
+    {
+      reason: {
+        type: String,
+        required: true,
+      },
+      flaggedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      flaggedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 },
   {
     timestamps: true,

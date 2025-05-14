@@ -3,6 +3,8 @@ import {
   getJobs,
   getJobById,
   uploadJobFile,
+  flagJob,
+  deleteJob
 } from '../controllers/job.controller.js';
 
 import { getJobsByCategory } from '../controllers/job.controller.js';
@@ -26,9 +28,12 @@ router.get('/category', getJobsByCategory);
 // GET /api/jobs/:id - Get job details by ID
 router.get('/:id', getJobById);
 
-
+router.post('/:id/flag', authenticate, flagJob);
 
 router.post('/:id/upload', authenticate, upload.single('file'), uploadJobFile);
+
+router.delete('/:id', authenticate, deleteJob);
+
 
 
 // POST /api/jobs/:id/apply - Apply for a job (Only freelancer can apply)

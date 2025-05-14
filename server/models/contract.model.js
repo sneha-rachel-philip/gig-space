@@ -12,7 +12,9 @@ const contractSchema = new mongoose.Schema(
         paidAt: { type: Date, default: null },
         paymentId: String,
         completedByFreelancer: { type: Boolean, default: false }, 
-        completedAt: Date                                           
+        completedAt: Date,
+        approvedByAdmin: { type: Boolean, default: false },
+        approvalRequestedAt: { type: Date, default: null }
       }
     ],
     

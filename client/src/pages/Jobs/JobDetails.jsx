@@ -175,8 +175,14 @@ const JobDetails = () => {
       if (action === 'apply') {
         await applyForJob(id);
         alert('Successfully applied for the job!');
-      } else if (action === 'delete') {
-        const confirm = window.confirm("Are you sure you want to delete this job? This action cannot be undone.");
+         } else if (action === 'delete') {
+        if (jobStatus !== 'open') {
+          alert('Only open jobs can be deleted.');
+          return;
+        }
+        const confirm = window.confirm(
+          'Are you sure you want to delete this job? This action cannot be undone.'
+        );
         if (confirm) {
           await deleteJob(id);
           alert('Job deleted successfully!');
@@ -271,25 +277,40 @@ const JobDetails = () => {
               <div className="d-flex gap-2 mt-3 mt-md-0">
                 {userRole === 'client' && (
                   <>
-                    <Button variant="outline-primary" onClick={() => handleJobAction('edit')}>
+                    <Button
+                      variant="outline-primary"
+                      onClick={() => handleJobAction('edit')}
+                    >
                       Edit Job
                     </Button>
-                    <Button variant="outline-danger" onClick={() => handleJobAction('delete')}>
+                    <Button
+                      variant="outline-danger"
+                      onClick={() => handleJobAction('delete')}
+                      disabled={jobStatus !== 'open'}
+                      title={jobStatus !== 'open' ? 'Only open jobs can be deleted' : ''}
+                    >
                       Delete Job
                     </Button>
                   </>
                 )}
                 {userRole === 'admin' && (
-                  <Button variant="outline-danger" onClick={() => handleJobAction('close')}>
+                  <Button
+                    variant="outline-danger"
+                    onClick={() => handleJobAction('close')}
+                  >
                     Close Job
                   </Button>
                 )}
                 {contractStatus === 'created' && userRole === 'client' && (
-                  <Button variant="primary" onClick={() => navigate(`/job-area/${job._id}`)}>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate(`/job-area/${job._id}`)}
+                  >
                     Go to Workspace
                   </Button>
                 )}
               </div>
+
             </div>
           </Card.Body>
         </Card>

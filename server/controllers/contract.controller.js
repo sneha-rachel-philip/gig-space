@@ -160,3 +160,69 @@ export const markMilestoneAsDone = async (req, res) => {
     res.status(500).json({ error: 'Server error while marking milestone' });
   }
 };
+
+export const approveMilestone = async (req, res) => {
+  const { contractId, milestoneLabel } = req.params;
+
+  try {
+    const contract = await Contract.findById(contractId);
+    if (!contract) return res.status(404).json({ error: 'Contract not found.' });
+
+    const milestone = contract.milestonePayments.find(m => m.label === milestoneLabel);
+    if (!milestone) return res.status(404).json({ error: 'Milestone not found.' });
+
+    if (!milestone.completedByFreelancer) {
+      return res.status(400).json({ error: 'Milestone has not been marked complete by freelancer.' });
+    }
+
+    if (milestone.approvedByAdmin) {
+      return res.status(400).json({ error: 'Milestone already approved.' });
+    }
+
+    milestone.approvedByAdmin = true;
+    milestone.approvalRequestedAt = new Date();
+
+    await contract.save();
+
+    return res.status(200).json({ message: 'Milestone approved successfully.' });
+  } catch (err) {
+    console.error('Milestone approval error:', err);
+    return res.status(500).json({ error: 'Server error during milestone approval.' });
+  }
+};
+
+export const getPendingMilestoneApprovals = async (req, res) => {
+  try {
+    // Find all contracts that have at least one milestone needing approval
+    const contracts = await Contract.find({
+      'milestonePayments.completedByFreelancer': true,
+      'milestonePayments.approvedByAdmin': false,
+    })
+      .populate('freelancer', 'name email')
+      .populate('client', 'name email')
+      .populate('job', 'title');
+
+    const pendingMilestones = [];
+
+    contracts.forEach(contract => {
+      contract.milestonePayments.forEach(milestone => {
+        if (milestone.completedByFreelancer && !milestone.approvedByAdmin) {
+          pendingMilestones.push({
+            contractId: contract._id,
+            jobTitle: contract.job?.title || 'Untitled Job',
+            client: contract.client,
+            freelancer: contract.freelancer,
+            milestoneLabel: milestone.label,
+            amount: milestone.amount,
+            completedAt: milestone.completedAt,
+          });
+        }
+      });
+    });
+
+    res.status(200).json(pendingMilestones);
+  } catch (err) {
+    console.error('Error fetching pending milestone approvals:', err);
+    res.status(500).json({ error: 'Server error fetching pending approvals' });
+  }
+};

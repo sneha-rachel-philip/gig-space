@@ -28,6 +28,18 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
+    adminNotes: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );

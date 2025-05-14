@@ -272,4 +272,58 @@ export const getJobsByFreelancer = async (req, res) => {
   }
 }
 
+// controllers/job.controller.js
+
+export const flagJob = async (req, res) => {
+  const { reason } = req.body;
+  const jobId = req.params.id;
+
+  if (!reason || reason.trim() === '') {
+    return res.status(400).json({ error: 'Reason is required.' });
+  }
+
+  try {
+    const job = await Job.findById(jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    job.flags.push({
+      reason,
+      flaggedBy: req.user._id,
+    });
+
+    await job.save();
+
+    res.status(200).json({ message: 'Job flagged successfully.' });
+  } catch (err) {
+    console.error('Error flagging job:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    if (job.status !== 'open') {
+      return res.status(400).json({ error: 'Only open jobs can be deleted.' });
+    }
+
+    const userId = req.user._id.toString();
+    const isClient = job.client.toString() === userId;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isClient && !isAdmin) {
+      return res.status(403).json({ error: 'Unauthorized to delete this job.' });
+    }
+
+    await job.deleteOne();
+    res.json({ success: true, message: 'Job deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+
+
 
