@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { postJob } from '../../services/apiRoutes'; 
 import { useNavigate } from 'react-router-dom';
-import '../../styles/PostJob.css'; // Assuming you have a CSS file for styling
+import jobCategories from '../../components/categories'; 
+import '../../styles/PostJob.css'; 
 const PostJob = () => {
   const navigate = useNavigate();
 
@@ -99,12 +100,13 @@ const PostJob = () => {
             onChange={handleChange}
             required
           >
-            <option value="">Select Category</option>
-            <option value="Web Development">Web Development</option>
-            <option value="Design">Design</option>
-            <option value="Marketing">Marketing</option>
-            <option value="Writing">Writing</option>
-            <option value="Data Analysis">Data Analysis</option>
+          <option value="">Select Category</option>
+          {jobCategories.map((category) => (
+            <option key={category.id} value={category.name}>
+              {category.name}
+            </option>
+          ))}
+
           </select>
         </div>
 

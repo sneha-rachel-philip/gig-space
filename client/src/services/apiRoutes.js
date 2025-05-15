@@ -29,10 +29,11 @@ export const postJob = (jobData) => axiosInstance.post('/client/jobs', jobData);
 export const getJobsByClient = () => axiosInstance.get('/client/jobs');
 export const updateJobStatus = (jobId, data) =>axiosInstance.put(`/client/jobs/${jobId}/status`, data);
 export const updateJob = (jobId, updatedData) => axiosInstance.put(`/client/jobs/${jobId}`, updatedData);
-
+export const getClientDashboardStats = () =>axiosInstance.get('/client/dashboard-stats');
 
 // Freelancer routes
 export const getJobsByFreelancer = () => axiosInstance.get('/freelancer/jobs');
+export const getFreelancerDashboardStats = () => axiosInstance.get('/freelancer/dashboard-stats');
 
 // Job routes
 //export const getJobs = () => axiosInstance.get('/jobs');
@@ -57,7 +58,7 @@ export const getContractByJobId = (jobId) => axiosInstance.get(`/contract/by-job
 export const updateContractStatus = (contractId, status) => axiosInstance.put(`/contract/update`, { contractId, status });
 export const markMilestoneAsDone = (contractId, label) => axiosInstance.post(`/contract/${contractId}/milestone/mark-done`, { label });
 export const getGroupedMilestoneApprovals = () =>axiosInstance.get('/contract/pending-approvals');
-  export const approveMilestone = (contractId, milestoneLabel) => axiosInstance.patch(`/contract/${contractId}/milestones/${milestoneLabel}/approve`);
+export const approveMilestone = (contractId, milestoneLabel) => axiosInstance.patch(`/contract/${contractId}/milestones/${milestoneLabel}/approve`);
 
 // Message routes
 export const sendMessage = (data) => axiosInstance.post('/messages/send', data);

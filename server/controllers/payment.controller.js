@@ -21,7 +21,7 @@ export const createPayment = async (req, res) => {
     // Create a Stripe Payment Intent
     const paymentIntent = await stripeClient.paymentIntents.create({
       amount: amount * 100,
-      currency: 'usd',
+      currency: 'inr',
       payment_method: paymentMethodId,
       confirm: true,
       metadata: {
@@ -286,7 +286,7 @@ export const createCheckoutSession = async (req, res) => {
       mode: 'payment',
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'inr',
           product_data: {
             name: `Milestone: ${milestoneLabel}`,
           },

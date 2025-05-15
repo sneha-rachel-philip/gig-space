@@ -1,80 +1,87 @@
 import React, { useEffect, useState } from 'react';
-import WelcomeBanner from '../../components/WelcomeBanner';
-import StatsOverview from '../../components/StatsOverview';
-import ProjectTable from '../../components/ProjectTable';
-import { useAuth } from '../../context/AuthContext';
-import '../../styles/ClientHome.css';
+import { getClientDashboardStats } from '../../services/apiRoutes'; // Adjust path as needed
+import { Card, Row, Col, Spinner } from 'react-bootstrap';
 
 const ClientHome = () => {
-  const { user } = useAuth(); // Assuming `user` contains user data from context
-  const [projects, setProjects] = useState([]);
-  const [stats, setStats] = useState({
-    active: 0,
-    completed: 0,
-    proposals: 0,
-    spending: 0,
-  });
-  const [userName, setUserName] = useState(''); // For storing dynamic user name
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch the user name from API if not available in context (optional)
-    const fetchUserName = async () => {
+    const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('token'); // Get token from localStorage
-      
-        const response = await fetch('/api/users/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      
-        if (!response.ok) {
-          throw new Error('Failed to fetch user');
-        }
-      
-        const user = await response.json();
-        console.log('User data:', user); // Debugging line
-        setUserName(user.name); // Update the welcome banner
-      } catch (err) {
-        console.error('Error fetching user name:', err);
-        setUserName(user?.name || 'Client'); // Fallback
+        const res = await getClientDashboardStats();;
+        setStats(res.data);
+      } catch (error) {
+        console.error('Error fetching client dashboard stats:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Fetch user name only if not available in context
-    if (!user?.name) {
-      fetchUserName();
-    } else {
-      setUserName(user.name); // Use context user name directly if available
-    }
+    fetchStats();
+  }, []);
 
-    // Dummy data for now (you can replace with real API calls)
-    setProjects([
-      { title: 'Website Redesign', budget: '$1,200', deadline: '2025-04-20', status: 'Active' },
-      { title: 'Mobile App', budget: '$3,000', deadline: '2025-05-10', status: 'Completed' },
-    ]);
-
-    setStats({
-      active: 1,
-      completed: 1,
-      proposals: 3,
-      spending: 4200,
-    });
-  }, [user?.name]); // Runs when user context changes or when user.name is available
+  if (loading) {
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
 
   return (
-    <div className="client-home">
-      <div className="welcome-banner">
-        <WelcomeBanner name={userName || 'Client'} /> {/* Using userName state here */}
-      </div>
+    <div className="container mt-4">
+      <h2 className="mb-4">Client Dashboard</h2>
 
-      <div className="stats-overview">
-        <StatsOverview stats={stats} />
-      </div>
+      {/* Hiring Funnel Section */}
+      <h5 className="text-muted mb-3">Hiring Statistics</h5>
+      <Row className="mb-4">
+        <Col md={6}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h6>Open Jobs</h6>
+              <h3>{stats.openJobs}</h3>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h6>Pending Contracts</h6>
+              <h3>{stats.pendingContracts}</h3>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-      <div className="project-table-wrapper">
-        <ProjectTable projects={projects} />
-      </div>
+      {/* Project Metrics Section */}
+      <h5 className="text-muted mb-3">Project Metrics</h5>
+      <Row>
+        <Col md={4}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h6>Active Projects</h6>
+              <h3>{stats.activeProjects}</h3>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h6>Completed Projects</h6>
+              <h3>{stats.completedProjects}</h3>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4}>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <h6>Total Spending</h6>
+              <h3>₹{stats.totalSpending}</h3>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

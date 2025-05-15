@@ -5,6 +5,7 @@ import {
   getJobsByClient,
   updateJob,
 } from '../controllers/job.controller.js';
+import { getClientDashboardStats} from '../controllers/user.controller.js';
 
 import { authenticate } from '../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../middlewares/roleMiddleware.js';
@@ -24,5 +25,10 @@ router.put('/jobs/:id', updateJob); // Protect this route
 
 // PUT /api/client/jobs/:id/status
 router.put('/jobs/:id/status', updateJobStatus);
+
+// GET /api/client/dashboard-stats
+router.get('/dashboard-stats', getClientDashboardStats);
+
+
 
 export default router;

@@ -193,22 +193,57 @@ export const approveMilestone = async (req, res) => {
 
 export const getPendingMilestoneApprovals = async (req, res) => {
   try {
-    // Find all contracts that have at least one milestone needing approval
-    const contracts = await Contract.find({
-      'milestonePayments.completedByFreelancer': true,
-      'milestonePayments.approvedByAdmin': false,
-    })
+    const contracts = await Contract.find({})
       .populate('freelancer', 'name email')
       .populate('client', 'name email')
       .populate('job', 'title');
 
-    const pendingMilestones = [];
+    const pending = [];
+    const awaitingPayments = [];
+    const completedPayments = [];
 
     contracts.forEach(contract => {
       contract.milestonePayments.forEach(milestone => {
-        if (milestone.completedByFreelancer && !milestone.approvedByAdmin) {
-          pendingMilestones.push({
+        const isPaid = Boolean(milestone.paidAt);
+        const isApproved = Boolean(milestone.approvedByAdmin);
+        const isCompleted = Boolean(milestone.completedByFreelancer);
+
+        // ✅ Completed & Paid (regardless of admin approval)
+        if (isPaid) {
+          completedPayments.push({
             contractId: contract._id,
+            jobId: contract.job?._id,
+            jobTitle: contract.job?.title || 'Untitled Job',
+            client: contract.client,
+            freelancer: contract.freelancer,
+            milestoneLabel: milestone.label,
+            amount: milestone.amount,
+            paidAt: milestone.paidAt,
+            paymentId: milestone.paymentId || null,
+            stripeSessionId: milestone.stripeSessionId || null,
+            contractStatus: contract.status,
+          });
+        }
+
+        // ⏳ Awaiting Payment: approved but not paid
+        else if (isApproved && !isPaid) {
+          awaitingPayments.push({
+            contractId: contract._id,
+            jobId: contract.job?._id,
+            jobTitle: contract.job?.title || 'Untitled Job',
+            client: contract.client,
+            freelancer: contract.freelancer,
+            milestoneLabel: milestone.label,
+            amount: milestone.amount,
+            approvedAt: milestone.approvalRequestedAt || null,
+          });
+        }
+
+        // 🔁 Pending Approval
+        else if (isCompleted && !isApproved && !isPaid) {
+          pending.push({
+            contractId: contract._id,
+            jobId: contract.job?._id,
             jobTitle: contract.job?.title || 'Untitled Job',
             client: contract.client,
             freelancer: contract.freelancer,
@@ -220,9 +255,14 @@ export const getPendingMilestoneApprovals = async (req, res) => {
       });
     });
 
-    res.status(200).json(pendingMilestones);
+    res.status(200).json({
+      pending,
+      awaitingPayments,
+      completedPayments,
+    });
   } catch (err) {
-    console.error('Error fetching pending milestone approvals:', err);
-    res.status(500).json({ error: 'Server error fetching pending approvals' });
+    console.error('Error fetching milestone approvals:', err);
+    res.status(500).json({ error: 'Server error fetching milestone approvals' });
   }
 };
+

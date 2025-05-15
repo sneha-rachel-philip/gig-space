@@ -41,7 +41,9 @@ const JobArea = () => {
   const [contractProgress, setContractProgress] = useState(0);
 
   // Computed properties
-  const getPaidMilestoneLabels = contract?.milestonePayments?.filter(m => m.paidAt).map(m => m.label) || [];
+  const getPaidMilestoneLabels = React.useMemo(() => {
+    return contract?.milestonePayments?.filter(m => m.paidAt).map(m => m.label) || [];
+  }, [contract?.milestonePayments]);
   const allMilestonesPaid = contract?.milestonePayments?.every(m => m.paidAt);
   const isClient = user?.role === 'client';
   const isFreelancer = contract?.freelancer?._id === user?._id;
@@ -346,6 +348,8 @@ const JobArea = () => {
                     const isPaid = getPaidMilestoneLabels.includes(milestone);
                     const contractMilestone = contract?.milestonePayments?.find(m => m.label === milestone);
                     const isCompleted = contractMilestone?.completedByFreelancer;
+                    const isApproved = contractMilestone?.approvedByAdmin;
+
                     
                     return (
                       <ListGroup.Item 
@@ -356,8 +360,13 @@ const JobArea = () => {
                           <Badge bg="primary" pill>{idx + 1}</Badge>
                           <span className="fs-6">{milestone}</span>
                           {isPaid && <Badge bg="success" pill>Paid</Badge>}
-                          {!isPaid && isCompleted && 
-                            <Badge bg="warning" text="dark" pill>Ready for Payment</Badge>}
+                          {!isPaid && isCompleted && !isApproved && (
+                            <Badge bg="warning" text="dark" pill>Pending Admin Approval</Badge>
+                          )}
+                          {!isPaid && isCompleted && isApproved && (
+                            <Badge bg="success" text="light" pill>Approved</Badge>
+                          )}
+
                         </div>
                         
                         <div className="d-flex gap-2">
@@ -366,7 +375,7 @@ const JobArea = () => {
                               variant={isCompleted ? "outline-success" : "outline-secondary"}
                               size="sm"
                               onClick={() => handleMilestonePayment(contractMilestone?.label, idx)}
-                              disabled={!isCompleted || contractStatus !== 'active'} 
+                              disabled={!isCompleted || !isApproved || contractStatus !== 'active'} 
                             >
                               {isCompleted 
                                 ? <><i className="bi bi-credit-card me-1"></i> Release ₹{contract?.milestonePayments?.[idx]?.amount}</>

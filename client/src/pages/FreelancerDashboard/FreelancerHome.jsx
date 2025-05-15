@@ -1,81 +1,83 @@
 import React, { useEffect, useState } from 'react';
+import { Card, Row, Col, Spinner } from 'react-bootstrap';
+import { getFreelancerDashboardStats } from '../../services/apiRoutes';
 import WelcomeBanner from '../../components/WelcomeBanner';
-import StatsOverview from '../../components/StatsOverview';
-import ProjectTable from '../../components/ProjectTable';
 import { useAuth } from '../../context/AuthContext';
-//import '../../styles/FreelancerHome.css'; // Uncomment if you're using styles
+
 
 const FreelancerHome = () => {
-  const { user } = useAuth(); // Get user context
-  const [projects, setProjects] = useState([]);
-  const [stats, setStats] = useState({
-    active: 0,
-    completed: 0,
-    proposals: 0,
-    spending: 0,
-  });
-  const [userName, setUserName] = useState(''); // Store the user name dynamically
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    // Check if the user context has the name
-    if (user?.name) {
-      setUserName(user.name); // Set name from context
-    } else {
-      fetchUserName(); // Fetch from API if name is missing in context
-    }
-
-    // Dummy data for now:
-    setProjects([
-      { title: 'Website Redesign', budget: '$1,200', deadline: '2025-04-20', status: 'Active' },
-      { title: 'Mobile App', budget: '$3,000', deadline: '2025-05-10', status: 'Completed' },
-    ]);
-
-    setStats({
-      active: 1,
-      completed: 1,
-      proposals: 3,
-      spending: 4200,
-    });
-  }, [user]); // Dependency on `user`, so it runs again when `user` changes
-
-  // Fetch the user name from API if it's not available in the context
-  const fetchUserName = async () => {
-    try {
-      const token = localStorage.getItem('token'); // Get token from localStorage
-      const response = await fetch('/api/users/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch user');
+    const getStats = async () => {
+      try {
+        const data = await getFreelancerDashboardStats();
+        setStats(data);
+      } catch (err) {
+        console.error('Error fetching freelancer dashboard stats:', err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const userData = await response.json();
-      console.log('User data from API:', userData); // Debugging
-      setUserName(userData.name); // Set the name if fetched from API
-    } catch (err) {
-      console.error('Error fetching user name:', err);
-      setUserName('Freelancer'); // Fallback name if fetching fails
-    }
-  };
+    getStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center mt-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return <div className="text-center mt-5">No data available.</div>;
+  }
 
   return (
-    <div className="freelancer-home">
-      <div className="welcome-banner">
-        {/* Display the user name */}
-        <WelcomeBanner name={userName || 'Freelancer'} />
-      </div>
+    <Row className="mt-4 g-4">
+      <WelcomeBanner name={currentUser?.name || 'User'} />
+      <Col md={6} xl={3}>
+        <Card border="primary" className="text-center shadow-sm">
+          <Card.Body>
+            <Card.Subtitle className="mb-2 text-muted">Active Jobs</Card.Subtitle>
+            <Card.Title>{stats.activeJobs}</Card.Title>
+          </Card.Body>
+        </Card>
+      </Col>
 
-      <div className="stats-overview">
-        <StatsOverview stats={stats} />
-      </div>
+      <Col md={6} xl={3}>
+        <Card border="success" className="text-center shadow-sm">
+          <Card.Body>
+            <Card.Subtitle className="mb-2 text-muted">Completed Jobs</Card.Subtitle>
+            <Card.Title>{stats.completedJobs}</Card.Title>
+          </Card.Body>
+        </Card>
+      </Col>
 
-      <div className="project-table-wrapper">
-        <ProjectTable projects={projects} />
-      </div>
-    </div>
+      <Col md={6} xl={3}>
+        <Card border="warning" className="text-center shadow-sm">
+          <Card.Body>
+            <Card.Subtitle className="mb-2 text-muted">Pending Proposals</Card.Subtitle>
+            <Card.Title>{stats.pendingProposals}</Card.Title>
+          </Card.Body>
+        </Card>
+      </Col>
+
+      <Col md={6} xl={3}>
+        <Card border="info" className="text-center shadow-sm">
+        <Card.Body>
+          <Card.Subtitle className="mb-2 text-muted">Total Earnings</Card.Subtitle>
+          <Card.Title>
+          ₹{stats?.totalEarnings != null ? stats.totalEarnings.toFixed(2) : '0.00'}
+          </Card.Title>
+        </Card.Body>
+        </Card>
+      </Col>
+    </Row>
   );
 };
 

@@ -69,7 +69,7 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/job-area/:jobId"
             element={
-            <PrivateRoute allowedRoles={['client', 'freelancer']}>
+            <PrivateRoute allowedRoles={['client', 'freelancer', 'admin']}>
             <JobArea />
             </PrivateRoute>
             } />

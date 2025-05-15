@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   FaHome,
@@ -18,6 +18,21 @@ const SidebarUser = ({ role }) => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const userRole = role || 'client';
+
+
+    // Collapse on small screens automatically
+    useEffect(() => {
+      const handleResize = () => {
+        if (window.innerWidth < 768) {
+          setCollapsed(true);
+        } else {
+          setCollapsed(false);
+        }
+      };
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -145,7 +160,7 @@ const SidebarUser = ({ role }) => {
             
             {!collapsed && (
               <div>
-                <div className="fw-bold">{currentUser?.name || 'User'}</div>
+                <div className="fw-bold text-dark">{currentUser?.name || 'User'}</div>
                 <Badge bg="secondary">{userRole}</Badge>
               </div>
             )}
