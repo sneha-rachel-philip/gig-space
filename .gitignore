@@ -56,6 +56,9 @@ dist/
 android/build/
 ios/build/
 
+#uploads
+uploads/
+
 # Other files
 *.bak
 *.swp
