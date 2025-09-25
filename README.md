@@ -49,7 +49,7 @@ cd gig-space
 ### 2. Setup Backend
 
 ```bash
-cd backend
+cd server
 npm install
 ```
 
@@ -68,7 +68,7 @@ npm run dev
 
 ### 3. Setup Frontend
 ```bash
-cd ../frontend
+cd ../client
 npm install
 npm run dev
 ```
